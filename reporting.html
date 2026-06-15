@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reporting commercial</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #fafafb;
+    --border: #e3e4ea;
+    --border-strong: #d6d8e0;
+    --text: #1a1a1f;
+    --text-muted: #6a7080;
+    --text-faint: #a4a8b3;
+    --accent: #1c8fd6;
+    --won: #1f9c52;
+    --won-soft: #d9f5e3;
+    --radius-sm: 7px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 1px 2px rgba(16, 17, 21, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv02', 'cv11', 'tnum';
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  body { min-height: 100vh; }
+
+  /* Layout */
+  .shell { max-width: 1320px; margin: 0 auto; padding: 26px clamp(16px, 2vw, 32px) 50px; }
+
+  /* Header */
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 16px; margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .header .subtitle { font-size: 13px; color: var(--text-muted); max-width: 600px; }
+  .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .select, .btn {
+    border: 1px solid var(--border-strong); background: #fff; color: var(--text);
+    padding: 7px 12px; border-radius: 8px;
+    font: inherit; font-size: 13px; cursor: pointer; outline: none;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .select:hover, .btn:hover { border-color: var(--text); }
+  .btn-add {
+    background: var(--text); color: #fff; border: 1px solid var(--text);
+    padding: 7px 13px; border-radius: 8px;
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background 0.12s;
+  }
+  .btn-add:hover { background: #000; }
+  .btn-add svg { width: 13px; height: 13px; stroke-width: 2.2; }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow);
+  }
+
+  /* Commercial filter */
+  .commercial-card { padding: 14px 18px; margin-bottom: 16px; }
+  .commercial-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .commercial-title {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .commercial-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .reset-btn {
+    background: transparent; border: none; color: var(--text-muted);
+    font-size: 11.5px; cursor: pointer; font-weight: 600;
+    padding: 4px 8px; border-radius: 6px;
+  }
+  .reset-btn:hover { background: #f4f5f7; color: var(--text); }
+  .commercial-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .commercial-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 4px 12px 4px 4px; border-radius: 999px;
+    background: #fff; border: 1px solid var(--border);
+    cursor: pointer; transition: background 0.12s, border-color 0.12s, color 0.12s;
+    font-size: 12.5px; font-weight: 500; color: var(--text);
+  }
+  .commercial-pill:hover { border-color: var(--text); }
+  .commercial-pill.selected { background: var(--text); color: #fff; border-color: var(--text); }
+  .avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text); font-weight: 700; font-size: 10px;
+    background: #fde0e9;
+    letter-spacing: -0.03em;
+  }
+  .commercial-pill.selected .avatar { box-shadow: 0 0 0 1.5px #fff; }
+
+  /* Alerts row — pastilles neutres */
+  .alerts-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px 3px 4px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 500;
+    line-height: 1.2;
+    border: 1px solid var(--border);
+    background: #fff; color: var(--text);
+    cursor: pointer; user-select: none;
+    transition: filter 0.12s, transform 0.08s, background 0.12s;
+  }
+  .pill:hover { filter: brightness(0.97); }
+  .pill:active { transform: scale(0.97); }
+  .pill .pill-icon {
+    width: 15px; height: 15px; border-radius: 50%;
+    background: #f1f2f5; color: var(--text-muted); border: 1px solid var(--border);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .pill .pill-icon svg { width: 9px; height: 9px; stroke-width: 2.4; }
+  .pill .pill-count {
+    background: rgba(0,0,0,0.06); padding: 0 5px; border-radius: 999px;
+    font-weight: 700; font-size: 10px; margin-left: 2px;
+  }
+  .pill.success { color: var(--text-muted); cursor: default; }
+  .pill.selected { background: #1a1a1f; color: #fff; border-color: #1a1a1f; }
+  .pill.selected .pill-count { background: rgba(255,255,255,0.18); color: #fff; }
+  .pill.selected .pill-icon { background: rgba(255,255,255,0.16); color: #fff; border-color: rgba(255,255,255,0.3); }
+
+  /* Report tabs */
+  .report-tabs {
+    display: flex; align-items: center; gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin: 0 0 22px;
+    overflow-x: auto;
+  }
+  .report-tab {
+    padding: 9px 14px; font-size: 13px; cursor: pointer;
+    color: var(--text-muted); border-bottom: 2px solid transparent;
+    margin-bottom: -1px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+    transition: color 0.12s;
+  }
+  .report-tab:hover { color: var(--text); }
+  .report-tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 600; }
+  .report-tabs .btn-add { margin-left: 4px; margin-bottom: 1px; padding: 6px 12px; }
+
+  /* KPI Section head + customize */
+  .kpi-section-head { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .kpi-customize-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid var(--border); color: var(--text-muted);
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .kpi-customize-btn:hover { background: var(--text); color: #fff; border-color: var(--text); }
+  .kpi-customize-btn svg { width: 12px; height: 12px; stroke-width: 2; }
+
+  /* KPI Grid */
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi { padding: 16px 18px; }
+  .kpi .label {
+    font-size: 12px; color: var(--text-muted); font-weight: 600;
+    margin-bottom: 10px; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .kpi .label .help {
+    cursor: help; color: var(--text-faint); font-size: 11px;
+    width: 14px; height: 14px; border-radius: 50%; background: #f4f5f7;
+    display: inline-flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .kpi .label .tip {
+    display: none;
+    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #1a1a1f; color: #fff; padding: 8px 12px; border-radius: 7px;
+    font-size: 11.5px; font-weight: 400; line-height: 1.4; width: 240px;
+    text-align: left; z-index: 30; white-space: normal;
+  }
+  .kpi .label .tip code { background: rgba(255,255,255,0.12); padding: 0 5px; border-radius: 3px; font-family: 'SF Mono', Menlo, monospace; }
+  .kpi .label .help:hover .tip { display: block; }
+  .kpi .value {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums; color: var(--text); line-height: 1.1;
+  }
+  .kpi .value small { font-size: 14px; color: var(--text-muted); font-weight: 600; margin-left: 2px; }
+
+  /* Conversion section */
+  .conv-section {
+    background: #fafafb; border: 1px solid var(--border); border-radius: 16px;
+    padding: 18px 20px 20px; margin-bottom: 24px;
+  }
+  .conv-section-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .conv-section-title {
+    margin: 0; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .conv-section-title::before { content: ''; width: 18px; height: 2px; background: var(--text); display: inline-block; }
+  .conv-section-sub { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+  .conv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .conv-card { background: #fff; border: 1px solid var(--border); padding: 14px 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .conv-card .label { font-size: 12px; }
+  .conv-card .value { font-size: 26px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; }
+  .conv-card .value small { font-size: 14px; color: var(--text-muted); font-weight: 600; margin-left: 2px; }
+  .conv-card .ratio { font-size: 11px; color: var(--text-muted); font-weight: 500; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .conv-step-tag {
+    display: inline-block; margin-top: 2px;
+    font-size: 10.5px; font-weight: 600; color: var(--text-muted);
+    background: #f4f5f7; border: 1px solid var(--border);
+    padding: 2px 9px; border-radius: 999px; align-self: flex-start;
+  }
+
+  /* Chart card */
+  .chart-card { padding: 18px 20px 20px; margin-bottom: 18px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+  .chart-title { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .chart-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .tabs { display: inline-flex; gap: 4px; background: #f4f5f7; padding: 4px; border-radius: 8px; }
+  .tab { padding: 5px 11px; font-size: 12px; font-weight: 600; color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: background 0.12s, color 0.12s; }
+  .tab.active { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .chart-wrap { position: relative; height: 280px; }
+
+  /* Status distribution */
+  .status-card { padding: 18px 20px; margin-bottom: 18px; }
+  .status-title { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 14px; }
+  .status-row { display: grid; grid-template-columns: 180px 1fr 100px; gap: 12px; align-items: center; padding: 6px 0; cursor: pointer; transition: opacity 0.12s; }
+  .status-row:hover { opacity: 0.85; }
+  .status-row .status-name { font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; color: var(--text); }
+  .status-row .status-name .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .status-bar { background: #f1f2f5; border-radius: 999px; height: 10px; overflow: hidden; }
+  .status-bar .fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+  .status-row .status-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* Table */
+  .table-card { padding: 18px 0 8px; margin-bottom: 18px; overflow: hidden; }
+  .table-header { display: flex; justify-content: space-between; align-items: center; padding: 0 22px 12px; }
+  .table-header .title { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .table-header .count { font-size: 12px; color: var(--text-muted); }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th {
+    text-align: left; font-weight: 700; color: var(--text-muted);
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    background: #fafafb;
+  }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafb; }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .badge {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+    background: #f4f5f7; color: var(--text); border: 1px solid var(--border);
+  }
+  .user-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f4f5f7; border: 1px solid var(--border);
+    border-radius: 999px; padding: 2px 9px 2px 2px;
+    font-size: 11.5px; color: var(--text); font-weight: 500;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15, 17, 24, 0.32);
+    z-index: 100; display: none; align-items: center; justify-content: center; padding: 24px;
+    opacity: 0; transition: opacity 0.18s;
+  }
+  .modal-backdrop.show { display: flex; opacity: 1; }
+  .modal {
+    background: #fff; border-radius: 16px; max-width: 560px; width: 100%; max-height: 86vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 24px 48px rgba(16,17,21,0.2);
+    transform: translateY(10px); transition: transform 0.22s ease;
+  }
+  .modal-backdrop.show .modal { transform: translateY(0); }
+  .modal-head { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-head h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .modal-close { width: 28px; height: 28px; border-radius: 7px; background: transparent; border: none; cursor: pointer; color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: #f4f5f7; color: var(--text); }
+  .modal-close svg { width: 13px; height: 13px; }
+  .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .modal-foot { padding: 12px 20px; border-top: 1px solid var(--border); background: #fafafb; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .modal-foot .btn-ghost { background: transparent; border: 1px solid transparent; color: var(--text-muted); font-size: 12.5px; font-weight: 600; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+  .modal-foot .btn-ghost:hover { background: #f4f5f7; color: var(--text); }
+
+  /* Import modal */
+  .field-group { margin-bottom: 14px; }
+  .field-group > label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .field-group input[type="file"] { width: 100%; padding: 9px; border: 1.5px dashed var(--border-strong); border-radius: 8px; background: #fafafb; cursor: pointer; font: inherit; font-size: 13px; }
+  .field-group textarea { width: 100%; min-height: 160px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; resize: vertical; outline: none; }
+  .field-group textarea:focus { border-color: var(--text); box-shadow: 0 0 0 3px rgba(26,26,31,0.06); }
+  .alert-box { padding: 10px 12px; border-radius: 8px; font-size: 12.5px; margin-top: 10px; }
+  .alert-box.success { background: var(--won-soft); color: #156b39; border: 1px solid rgba(31, 156, 82, 0.25); }
+  .alert-box.error { background: #fde2e2; color: #8a1f1f; border: 1px solid #f1b0b0; }
+  .or-divider { text-align: center; color: var(--text-muted); font-size: 12px; margin: 6px 0; }
+
+  /* KPI customizer modal */
+  .kpic-section-title {
+    font-size: 10.5px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .kpic-section-title:not(:first-child) { margin-top: 18px; }
+  .kpic-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+    padding: 9px 10px; border-radius: 9px; cursor: pointer; transition: background 0.12s;
+  }
+  .kpic-row:hover { background: #f4f5f7; }
+  .kpic-row .ki-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .kpic-row .ki-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .kpic-row .ki-actions { display: flex; align-items: center; gap: 6px; }
+  .kpic-row .ki-del {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: transparent; border: none; cursor: pointer; color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .kpic-row .ki-del:hover { background: #fde2e2; color: #8a1f1f; }
+  .kpic-row .ki-del svg { width: 13px; height: 13px; }
+  .ki-toggle {
+    width: 36px; height: 20px; border-radius: 999px;
+    background: var(--border-strong); position: relative;
+    transition: background 0.18s; flex-shrink: 0; cursor: pointer;
+  }
+  .ki-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; transition: left 0.18s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .ki-toggle.on { background: var(--text); }
+  .ki-toggle.on::after { left: 18px; }
+  .kpic-custom-form {
+    background: #f4f5f7; border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; margin-top: 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .kpic-custom-form input, .kpic-custom-form select {
+    border: 1px solid var(--border-strong); border-radius: 7px;
+    padding: 7px 10px; font: inherit; font-size: 12.5px;
+    background: #fff; outline: none;
+  }
+  .kpic-custom-form input:focus, .kpic-custom-form select:focus {
+    border-color: var(--text); box-shadow: 0 0 0 3px rgba(26,26,31,0.05);
+  }
+  .kpic-custom-form .full { grid-column: 1 / -1; }
+  .kpic-custom-form .add-btn {
+    grid-column: 1 / -1;
+    background: var(--text); color: #fff; border: none;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .kpic-custom-form .add-btn:hover { background: #000; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a1a1f; color: #fff;
+    padding: 10px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    z-index: 200; opacity: 0; pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .conv-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .conv-grid { grid-template-columns: 1fr; }
+    .status-row { grid-template-columns: 130px 1fr 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Default data embarquées (icsmta) -->
+<script type="application/json" id="defaultData">
+{"count":32,"opportunities":[{"opportunity_id":5,"opportunity":{"id":5,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"09-04-2026","updated_at":"29-05-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"50000.00","percentage":"0","opportunity_status":"Devis/Offre envoyé","opportunity_source":"Campagne mail","fullName":"Eric PAINCHAULT","companyName":"Instalatec","history":[{"created_at":"2026-05-13T12:11:27.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-05-12T07:06:46.000000Z","value":"Rendez-vous prévu","data_field":"le statut"},{"created_at":"2026-04-09T15:08:10.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":85,"date":"2026-06-04 14:47:24"}]},{"opportunity_id":7,"opportunity":{"id":7,"name":"Sodeplast","created_at":"27-04-2026","updated_at":"28-04-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"960.00","percentage":"100","opportunity_status":"Gagné","opportunity_source":"Suivi Web","fullName":"AMAURY TEILLOL","companyName":"sodeplast","history":[{"created_at":"2026-04-28T14:30:45.000000Z","value":"Gagné","data_field":"le statut"},{"created_at":"2026-04-27T13:12:52.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":15,"date":"2026-04-28 16:30:45"}]},{"opportunity_id":8,"opportunity":{"id":8,"name":"DRY 50kW - OD752486 H2PU31","created_at":"27-04-2026","updated_at":"27-04-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"9990.00","percentage":"0","opportunity_status":"Devis/Offre envoyé","opportunity_source":"Suivi Web","fullName":"PABLO LOPEZ","companyName":"PABLO LOPEZ","history":[{"created_at":"2026-04-27T14:02:49.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"}]},"comments":[{"id":5,"date":"2026-04-27 16:02:49"}]},{"opportunity_id":10,"opportunity":{"id":10,"name":"Bionov","created_at":"28-04-2026","updated_at":"01-06-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"10000.00","percentage":"0","opportunity_status":"Devis/Offre envoyé","opportunity_source":"Suivi Web","fullName":"Jean michel Costes","companyName":"Bionov - Groupe Robertet","history":[{"created_at":"2026-06-01T14:07:21.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-04-28T15:08:50.000000Z","value":"Rendez-vous prévu","data_field":"le statut"}]},"comments":[{"id":77,"date":"2026-06-01 16:04:34"}]},{"opportunity_id":11,"opportunity":{"id":11,"name":"Les Grands Chais","created_at":"29-04-2026","updated_at":"29-04-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"0.00","percentage":"0","opportunity_status":"En attente/à relancer","opportunity_source":"Suivi Web","fullName":"Léo Martin","companyName":"LES GRANDS CHAIS DE France","history":[{"created_at":"2026-04-29T12:08:04.000000Z","value":"En attente/à relancer","data_field":"le statut"}]},"comments":[]},{"opportunity_id":12,"opportunity":{"id":12,"name":"KOMAX","created_at":"05-05-2026","updated_at":"22-05-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"4500.00","percentage":"100","opportunity_status":"Gagné","opportunity_source":"Campagne Ads","fullName":"Marion FORGES","companyName":"Komax France","history":[{"created_at":"2026-05-22T12:03:01.000000Z","value":"Gagné","data_field":"le statut"},{"created_at":"2026-05-19T08:19:17.000000Z","value":"En attente/à relancer","data_field":"le statut"},{"created_at":"2026-05-05T11:39:17.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-05-05T10:34:02.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":63,"date":"2026-05-22 14:03:01"}]},{"opportunity_id":13,"opportunity":{"id":13,"name":"Quark","created_at":"07-05-2026","updated_at":"11-05-2026","user_id":7,"user_first_name":"Julien","user_last_name":"Nebili","amount":"15466.00","percentage":"20","opportunity_status":"En attente/à relancer","opportunity_source":"Suivi Web","fullName":"Didier THOMAS","companyName":"QUARK REFRIGERATION","history":[{"created_at":"2026-05-07T11:53:19.000000Z","value":"En attente/à relancer","data_field":"le statut"}]},"comments":[{"id":34,"date":"2026-05-11 11:15:50"}]},{"opportunity_id":14,"opportunity":{"id":14,"name":"Emitech","created_at":"07-05-2026","updated_at":"11-05-2026","user_id":7,"user_first_name":"Julien","user_last_name":"Nebili","amount":"4028.00","percentage":"50","opportunity_status":"En attente/à relancer","opportunity_source":"Suivi Web","fullName":"Yannick LELARGE","companyName":"EMITECH SAS","history":[{"created_at":"2026-05-07T11:54:00.000000Z","value":"En attente/à relancer","data_field":"le statut"}]},"comments":[{"id":29,"date":"2026-05-07 11:19:32"}]},{"opportunity_id":15,"opportunity":{"id":15,"name":"Savart","created_at":"07-05-2026","updated_at":"05-06-2026","user_id":5,"user_first_name":"Julie","user_last_name":"Teixeira","amount":"15000.00","percentage":"100","opportunity_status":"Gagné","opportunity_source":"Suivi Web","fullName":"Leoni Savart","companyName":"SARL SAVART","history":[{"created_at":"2026-06-05T06:51:15.000000Z","value":"Gagné","data_field":"le statut"},{"created_at":"2026-05-07T11:55:04.000000Z","value":"En attente/à relancer","data_field":"le statut"}]},"comments":[{"id":88,"date":"2026-06-05 08:51:15"}]},{"opportunity_id":16,"opportunity":{"id":16,"name":"OEM","created_at":"08-05-2026","updated_at":"19-05-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"0.00","percentage":"0","opportunity_status":"En attente/à relancer","opportunity_source":"Suivi Web","fullName":"Jeff Borth","companyName":"Illuminated Extractors","history":[{"created_at":"2026-05-19T08:06:25.000000Z","value":"En attente/à relancer","data_field":"le statut"},{"created_at":"2026-05-18T13:58:59.000000Z","value":"Rendez-vous prévu","data_field":"le statut"},{"created_at":"2026-05-08T10:03:21.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":47,"date":"2026-05-18 15:58:59"}]},{"opportunity_id":17,"opportunity":{"id":17,"name":"Absolut","created_at":"08-05-2026","updated_at":"19-05-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"0.00","percentage":"0","opportunity_status":"Rendez-vous prévu","opportunity_source":"Suivi Web","fullName":"Léa Yvernault","companyName":"Absolut System","history":[{"created_at":"2026-05-19T11:00:41.000000Z","value":"Rendez-vous prévu","data_field":"le statut"},{"created_at":"2026-05-08T10:04:11.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":54,"date":"2026-05-19 13:00:41"}]},{"opportunity_id":18,"opportunity":{"id":18,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"14-05-2026","updated_at":"19-05-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"0.00","percentage":"0","opportunity_status":"En attente/à relancer","opportunity_source":"Campagne mail","fullName":"Benjamin Opara","companyName":"TIBSHORE AFRIK SERVICE LTD","history":[{"created_at":"2026-05-19T08:06:37.000000Z","value":"En attente/à relancer","data_field":"le statut"},{"created_at":"2026-05-14T10:19:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":49,"date":"2026-05-19 10:05:56"}]},{"opportunity_id":19,"opportunity":{"id":19,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"14-05-2026","updated_at":"03-06-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"2027.00","percentage":"0","opportunity_status":"Devis/Offre envoyé","opportunity_source":"Campagne mail","fullName":"nassim zizi","companyName":"CORPORATE M&M INDUSTRIE","history":[{"created_at":"2026-05-26T09:41:27.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-05-14T19:03:02.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":83,"date":"2026-06-03 15:48:56"}]},{"opportunity_id":20,"opportunity":{"id":20,"name":"Opportunité via: Landing page soumise: Form Website Location","created_at":"16-05-2026","updated_at":"01-06-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"0.00","percentage":"0","opportunity_status":"Perdu","opportunity_source":"Campagne mail","fullName":"Kalecou Mandiang","companyName":"Association Art en Harmonie","history":[{"created_at":"2026-06-01T14:02:18.000000Z","value":"Perdu","data_field":"le statut"},{"created_at":"2026-05-19T10:58:28.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-05-19T10:57:59.000000Z","value":"Rendez-vous prévu","data_field":"le statut"},{"created_at":"2026-05-16T12:41:02.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":75,"date":"2026-06-01 16:02:18"}]},{"opportunity_id":21,"opportunity":{"id":21,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"19-05-2026","updated_at":"09-06-2026","user_id":5,"user_first_name":"Julie","user_last_name":"Teixeira","amount":"1500.00","percentage":"100","opportunity_status":"Gagné","opportunity_source":"Campagne mail","fullName":"Richard Debiak","companyName":"MAXEI","history":[{"created_at":"2026-06-09T13:59:06.000000Z","value":"Gagné","data_field":"le statut"},{"created_at":"2026-05-27T09:25:39.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-05-19T10:00:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":95,"date":"2026-06-09 15:59:07"}]},{"opportunity_id":22,"opportunity":{"id":22,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"19-05-2026","updated_at":"20-05-2026","user_id":7,"user_first_name":"Julien","user_last_name":"Nebili","amount":"0.00","percentage":"0","opportunity_status":"Perdu","opportunity_source":"Campagne mail","fullName":"TONI CADEAU","companyName":"HERVE THERMIQUE","history":[{"created_at":"2026-05-20T09:51:30.000000Z","value":"Perdu","data_field":"le statut"},{"created_at":"2026-05-19T13:10:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":23,"opportunity":{"id":23,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"20-05-2026","updated_at":"20-05-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"0.00","percentage":"0","opportunity_status":"En attente/à relancer","opportunity_source":"Campagne mail","fullName":"CHRISTOPHE REY","companyName":"CALVET","history":[{"created_at":"2026-05-20T12:02:48.000000Z","value":"En attente/à relancer","data_field":"le statut"},{"created_at":"2026-05-20T09:06:02.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":25,"opportunity":{"id":25,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"21-05-2026","updated_at":"29-05-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"0.00","percentage":"0","opportunity_status":"En attente/à relancer","opportunity_source":"Campagne mail","fullName":"Bouskila Natanael","companyName":"ELECTRIS","history":[{"created_at":"2026-05-29T14:56:39.000000Z","value":"En attente/à relancer","data_field":"le statut"},{"created_at":"2026-05-21T05:18:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":26,"opportunity":{"id":26,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"21-05-2026","updated_at":"02-06-2026","user_id":2,"user_first_name":"Support","user_last_name":"Ventes","amount":"7500.00","percentage":"0","opportunity_status":"Devis/Offre envoyé","opportunity_source":"Campagne mail","fullName":"arnaud CHERI","companyName":"REFRITECH OI","history":[{"created_at":"2026-06-02T06:58:38.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-05-21T05:51:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":81,"date":"2026-06-02 08:58:38"}]},{"opportunity_id":27,"opportunity":{"id":27,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"21-05-2026","updated_at":"22-05-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"0.00","percentage":"0","opportunity_status":"Perdu","opportunity_source":"Campagne mail","fullName":"lucas Martinoff","companyName":"AQMO","history":[{"created_at":"2026-05-22T12:01:20.000000Z","value":"Perdu","data_field":"le statut"},{"created_at":"2026-05-21T07:30:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":28,"opportunity":{"id":28,"name":"Vicat","created_at":"26-05-2026","updated_at":"01-06-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"8000.00","percentage":"0","opportunity_status":"Devis/Offre envoyé","opportunity_source":"Suivi Web","fullName":"Pascal Lejour","companyName":"Vicat Saint Egrève","history":[{"created_at":"2026-06-01T14:34:09.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-05-26T11:22:30.000000Z","value":"Rendez-vous prévu","data_field":"le statut"}]},"comments":[{"id":80,"date":"2026-06-01 16:34:09"}]},{"opportunity_id":30,"opportunity":{"id":30,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"27-05-2026","updated_at":"01-06-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"0.00","percentage":"0","opportunity_status":"Rendez-vous prévu","opportunity_source":"Campagne mail","fullName":"Hugo Pradier","companyName":"Acciona Energia","history":[{"created_at":"2026-06-01T13:02:58.000000Z","value":"Rendez-vous prévu","data_field":"le statut"},{"created_at":"2026-05-27T14:16:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":74,"date":"2026-06-01 15:02:58"}]},{"opportunity_id":31,"opportunity":{"id":31,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"28-05-2026","updated_at":"29-05-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"0.00","percentage":"0","opportunity_status":"En attente/à relancer","opportunity_source":"Campagne mail","fullName":"Antoine Trébaul","companyName":"HEF PHOTONICS","history":[{"created_at":"2026-05-29T14:57:05.000000Z","value":"En attente/à relancer","data_field":"le statut"},{"created_at":"2026-05-28T13:47:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":72,"date":"2026-05-29 14:47:26"}]},{"opportunity_id":32,"opportunity":{"id":32,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"03-06-2026","updated_at":"03-06-2026","user_id":7,"user_first_name":"Julien","user_last_name":"Nebili","amount":"0.00","percentage":"0","opportunity_status":"Nouveau","opportunity_source":"Campagne mail","fullName":"GERMAIN MESLET","companyName":"Earl Domaine des Géléries","history":[{"created_at":"2026-06-03T06:42:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":33,"opportunity":{"id":33,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"03-06-2026","updated_at":"08-06-2026","user_id":5,"user_first_name":"Julie","user_last_name":"Teixeira","amount":"1800.00","percentage":"0","opportunity_status":"Devis/Offre envoyé","opportunity_source":"Campagne mail","fullName":"ERIC DELSERT","companyName":"LESAFFRE","history":[{"created_at":"2026-06-08T08:01:07.000000Z","value":"Devis/Offre envoyé","data_field":"le statut"},{"created_at":"2026-06-03T08:57:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":94,"date":"2026-06-08 10:01:07"}]},{"opportunity_id":34,"opportunity":{"id":34,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"03-06-2026","updated_at":"05-06-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"16000.00","percentage":"0","opportunity_status":"Rendez-vous prévu","opportunity_source":"Campagne mail","fullName":"OLIVIER MOULINAT","companyName":"CLAUGER","history":[{"created_at":"2026-06-04T12:48:46.000000Z","value":"Rendez-vous prévu","data_field":"le statut"},{"created_at":"2026-06-03T13:09:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[{"id":86,"date":"2026-06-04 14:48:46"}]},{"opportunity_id":35,"opportunity":{"id":35,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"05-06-2026","updated_at":"05-06-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"0.00","percentage":"0","opportunity_status":"Nouveau","opportunity_source":"Campagne mail","fullName":"emerick allezard","companyName":"Pieces express","history":[{"created_at":"2026-06-05T08:04:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":36,"opportunity":{"id":36,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"05-06-2026","updated_at":"05-06-2026","user_id":8,"user_first_name":"Grégory","user_last_name":"Saillard","amount":"0.00","percentage":"0","opportunity_status":"Perdu","opportunity_source":"Campagne mail","fullName":"Rui PEREIRA","companyName":"Rui Emmanuel PEREIRA","history":[{"created_at":"2026-06-05T14:05:08.000000Z","value":"Perdu","data_field":"le statut"},{"created_at":"2026-06-05T11:38:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":37,"opportunity":{"id":37,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"07-06-2026","updated_at":"07-06-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"0.00","percentage":"0","opportunity_status":"Nouveau","opportunity_source":"Campagne mail","fullName":"Abdelkrim Ghalem","companyName":"Sarl sharikat ghalem lil halib","history":[{"created_at":"2026-06-07T21:55:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":38,"opportunity":{"id":38,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"08-06-2026","updated_at":"08-06-2026","user_id":10,"user_first_name":"Manuel","user_last_name":"Alves","amount":"0.00","percentage":"0","opportunity_status":"Nouveau","opportunity_source":"Campagne mail","fullName":"Sébastien CHARRE","companyName":"SYMATESE.Lab","history":[{"created_at":"2026-06-08T15:12:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":39,"opportunity":{"id":39,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"09-06-2026","updated_at":"09-06-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"0.00","percentage":"0","opportunity_status":"Nouveau","opportunity_source":"Campagne mail","fullName":"Oumayma RAKKABI","companyName":"Safran","history":[{"created_at":"2026-06-09T09:56:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]},{"opportunity_id":40,"opportunity":{"id":40,"name":"Opportunité via: Landing page soumise: Form Website","created_at":"09-06-2026","updated_at":"09-06-2026","user_id":4,"user_first_name":"Gaëtan","user_last_name":"Tourniaire","amount":"0.00","percentage":"0","opportunity_status":"Nouveau","opportunity_source":"Campagne mail","fullName":"Cédric GLEIZES","companyName":"TARDY SARL","history":[{"created_at":"2026-06-09T10:54:03.000000Z","value":"Nouveau","data_field":"le statut"}]},"comments":[]}]}
+</script>
+
+<div class="shell">
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>Reporting</h1>
+      <div class="subtitle" id="subtitle">Suivi du pipeline commercial de toute l'équipe.</div>
+    </div>
+    <div class="header-controls">
+      <select class="select" id="periodFilter">
+        <option value="all">Toute la période</option>
+        <option value="12">12 mois</option>
+        <option value="6">6 mois</option>
+        <option value="3">3 mois</option>
+        <option value="1">1 mois</option>
+      </select>
+      <button class="btn-add" id="importBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importer du JSON
+      </button>
+    </div>
+  </div>
+
+  <!-- Commercial filter -->
+  <div class="card commercial-card">
+    <div class="commercial-head">
+      <div>
+        <div class="commercial-title">Filtrer par commercial</div>
+        <div class="commercial-sub">Cliquez sur un profil pour voir uniquement ses opportunités</div>
+      </div>
+      <button class="reset-btn" id="resetBtn">Réinitialiser</button>
+    </div>
+    <div class="commercial-row" id="commercialRow"></div>
+  </div>
+
+  <!-- Alerts row -->
+  <div class="alerts-row" id="alertsRow"></div>
+
+  <!-- KPI Section -->
+  <div class="kpi-section-head">
+    <button class="kpi-customize-btn" id="kpiCustomizeBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      Personnaliser
+    </button>
+  </div>
+  <div class="kpi-grid" id="kpiGridTop"></div>
+
+  <!-- Conversion section -->
+  <div class="conv-section">
+    <div class="conv-section-head">
+      <div>
+        <h2 class="conv-section-title">Taux de conversion</h2>
+        <div class="conv-section-sub">Performance à chaque étape du pipeline</div>
+      </div>
+    </div>
+    <div class="conv-grid">
+      <div class="card conv-card">
+        <div class="label">Conv. globale <span class="help">?<span class="tip">Part de toutes les opps clôturées qui sont gagnées.<br><code>Gagné / (Gagné + Perdu)</code></span></span></div>
+        <div class="value" id="kpiConvAll">—</div>
+        <div class="ratio" id="kpiConvAllRatio"></div>
+        <div class="conv-step-tag">Sur opps clôturées</div>
+      </div>
+      <div class="card conv-card">
+        <div class="label">Conv. depuis RDV <span class="help">?<span class="tip">Part des opps clôturées ayant atteint RDV qui sont gagnées.</span></span></div>
+        <div class="value" id="kpiConvRdv">—</div>
+        <div class="ratio" id="kpiConvRdvRatio"></div>
+        <div class="conv-step-tag">Étape : Rendez-vous prévu</div>
+      </div>
+      <div class="card conv-card">
+        <div class="label">Conv. depuis Devis <span class="help">?<span class="tip">Part des opps clôturées ayant atteint Devis qui sont gagnées.</span></span></div>
+        <div class="value" id="kpiConvDevis">—</div>
+        <div class="ratio" id="kpiConvDevisRatio"></div>
+        <div class="conv-step-tag">Étape : Devis/Offre envoyé</div>
+      </div>
+      <div class="card conv-card">
+        <div class="label">Conversion clôturée <span class="help">?<span class="tip">Part des opps clôturées qui sont gagnées.<br><code>Gagné / (Gagné + Perdu)</code></span></span></div>
+        <div class="value" id="kpiConv">—</div>
+        <div class="ratio" id="kpiConvRatio"></div>
+        <div class="conv-step-tag">Deals clôturés (Gagné + Perdu)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card chart-card">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Pipeline mensuel</div>
+        <div class="chart-sub">Montant des opportunités par mois de création</div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" data-mode="cumul">Cumulé</div>
+        <div class="tab" data-mode="statut">Par statut</div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>
+  </div>
+
+  <!-- Status distribution -->
+  <div class="card status-card">
+    <div class="status-title">Répartition par statut</div>
+    <div id="statusRows"></div>
+  </div>
+
+  <!-- Opportunities table -->
+  <div class="card table-card">
+    <div class="table-header">
+      <div class="title">Opportunités</div>
+      <div class="count"><span id="oppCount">0</span> au total</div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Société</th>
+            <th>Contact</th>
+            <th>Commercial</th>
+            <th>Source</th>
+            <th class="num">Montant</th>
+            <th class="num">Prob.</th>
+            <th>Statut</th>
+            <th>Créée le</th>
+          </tr>
+        </thead>
+        <tbody id="oppBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Import JSON Modal -->
+<div class="modal-backdrop" id="importBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Importer du JSON</h2>
+      <button class="modal-close" id="importClose" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Charger un fichier JSON</label>
+        <input type="file" id="importFile" accept="application/json,.json">
+      </div>
+      <div class="or-divider">— ou —</div>
+      <div class="field-group">
+        <label>Coller le contenu JSON</label>
+        <textarea id="importTextarea" placeholder='{"count": ..., "opportunities": [...]}'></textarea>
+      </div>
+      <div id="importAlert"></div>
+      <div style="background:#fafafb; border:1px solid var(--border); border-radius:9px; padding:12px; font-size:12px; color:var(--text-muted); margin-top:8px;">
+        Format attendu : <code style="background:#fff; padding:2px 6px; border-radius:4px;">{ count, opportunities: [...] }</code> au format Catch-up. Données stockées en localStorage, persistantes au refresh.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" id="importResetBtn">Réinitialiser aux données par défaut</button>
+      <button class="btn-add" id="importApplyBtn">Appliquer l'import</button>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Customize Modal -->
+<div class="modal-backdrop" id="kpicBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Personnaliser les KPIs</h2>
+      <button class="modal-close" id="kpicCloseBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="kpicBody"></div>
+    <div class="modal-foot">
+      <span style="font-size:11.5px; color:var(--text-muted);">Active/désactive ou crée des KPIs personnalisés.</span>
+      <button class="btn-add" id="kpicSaveBtn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   STORAGE & DATA
+============================================================ */
+const LS_DATA = 'reporting_data';
+const LS_KPI_TOP = 'reporting_kpi_selection';
+const LS_KPI_CUSTOM = 'reporting_kpi_custom';
+
+function loadData() {
+  try {
+    const stored = localStorage.getItem(LS_DATA);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return JSON.parse(document.getElementById('defaultData').textContent);
+}
+function saveData(data) {
+  try { localStorage.setItem(LS_DATA, JSON.stringify(data)); } catch (e) { console.error(e); }
+}
+function resetData() { try { localStorage.removeItem(LS_DATA); } catch {} }
+
+let rawData = loadData();
+let rawRows = normalizeData(rawData);
+
+function normalizeData(data) {
+  if (!data || !Array.isArray(data.opportunities)) return [];
+  return data.opportunities.map(o => {
+    const op = o.opportunity || {};
+    return {
+      id: op.id,
+      name: op.name || '',
+      company: op.companyName || '',
+      contact: op.fullName || '',
+      amount: parseFloat(op.amount || 0) || 0,
+      percentage: parseFloat(op.percentage || 0) || 0,
+      status: op.opportunity_status || 'Nouveau',
+      source: op.opportunity_source || '',
+      createdAt: op.created_at || '',
+      updatedAt: op.updated_at || '',
+      userId: op.user_id,
+      userFirst: op.user_first_name || '',
+      userLast: op.user_last_name || '',
+      userName: `${op.user_first_name || ''} ${op.user_last_name || ''}`.trim() || 'Non assigné',
+      history: Array.isArray(op.history) ? op.history : [],
+      comments: Array.isArray(o.comments) ? o.comments : []
+    };
+  });
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function escapeHTML(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+function fmtEUR(v) {
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Math.round(v)) + ' €';
+}
+function fmtNum(v) {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(v));
+}
+function parseDateFR(s) {
+  if (!s) return null;
+  const m = String(s).match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return null;
+  return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+}
+function parseFlexibleDate(s) {
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return new Date(s);
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(s)) return new Date(s.replace(' ', 'T'));
+  if (/^\d{2}-\d{2}-\d{4}/.test(s)) return parseDateFR(s.slice(0, 10));
+  return null;
+}
+function daysSince(s) {
+  const d = parseDateFR(s);
+  if (!d) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+function initialsTxt(first, last) {
+  return ((first || '')[0] || '?').toUpperCase() + ((last || '')[0] || '').toUpperCase();
+}
+const AVATAR_PALETTE = ["#fde0e9","#d6f1dc","#fff0c2","#ffd9da","#d8eff3","#e0e4ff","#f4e0ff","#d9efe9"];
+function avatarColor(id) {
+  if (id == null) return '#e8eaf0';
+  const idx = ((id || 0) % AVATAR_PALETTE.length + AVATAR_PALETTE.length) % AVATAR_PALETTE.length;
+  return AVATAR_PALETTE[idx];
+}
+
+const STATUS_COLOR = {
+  "Nouveau": "#9bd7af",
+  "Devis/Offre envoyé": "#b6c2f6",
+  "En attente/à relancer": "#ffd98a",
+  "Rendez-vous prévu": "#9bd0d6",
+  "Gagné": "#7fd4a0",
+  "Perdu": "#f6a8a8",
+};
+const STATUS_ORDER = ["Nouveau", "Rendez-vous prévu", "Devis/Offre envoyé", "En attente/à relancer", "Gagné", "Perdu"];
+const PIPELINE_ORDER = {
+  "Nouveau": 1, "Rendez-vous prévu": 2, "Devis/Offre envoyé": 3, "Gagné": 4, "Perdu": 4, "En attente/à relancer": 0,
+};
+function reachedStatus(opp, targetStatus) {
+  const target = PIPELINE_ORDER[targetStatus] || 0;
+  const current = PIPELINE_ORDER[opp.status] || 0;
+  if (current >= target && target > 0) return true;
+  if (Array.isArray(opp.history)) {
+    return opp.history.some(h =>
+      (h.data_field === 'le statut' || h.data_field === 'opportunity_status') &&
+      (h.value === targetStatus || (PIPELINE_ORDER[h.value] || 0) >= target)
+    );
+  }
+  return false;
+}
+function uniqueUsers(rows) {
+  const map = new Map();
+  rows.forEach(r => {
+    if (r.userId == null) return;
+    if (!map.has(r.userId)) {
+      map.set(r.userId, { id: r.userId, first: r.userFirst, last: r.userLast, name: r.userName });
+    }
+  });
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._tid);
+  toast._tid = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   STATE
+============================================================ */
+let selectedUserId = null;
+let activeAlertKey = null;
+let periodMonths = 'all';
+let chartMode = 'cumul';
+let chartInstance = null;
+
+const isActiveStatus = r => r.status !== 'Gagné' && r.status !== 'Perdu';
+
+const ALERT_PREDICATES = {
+  noAmount:     r => isActiveStatus(r) && r.amount === 0,
+  noDate:       r => isActiveStatus(r) && !r.updatedAt,
+  stale:        r => { if (!isActiveStatus(r)) return false; const d = daysSince(r.updatedAt); return d != null && d > 21; },
+  devisNoProba: r => isActiveStatus(r) && r.status === 'Devis/Offre envoyé' && r.percentage === 0,
+  longWait:     r => { if (r.status !== 'En attente/à relancer') return false; const d = daysSince(r.updatedAt); return d != null && d > 14; },
+  noActivity:   r => isActiveStatus(r) && (!r.comments || r.comments.length === 0),
+};
+const ICONS = {
+  euro:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12"/><path d="M4 14h9"/><path d="M19 6a7.5 7.5 0 0 0-5.5-2C9 4 5 8 5 12s4 8 8.5 8a7.5 7.5 0 0 0 5.5-2"/></svg>',
+  cal:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  clock:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  pct:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>',
+  warn:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  chat:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+};
+
+/* ============================================================
+   KPI LIBRARY
+============================================================ */
+const KPI_LIBRARY = {
+  pipeline:       { label: 'Pipeline ouvert',         sub: 'Σ Montant (Statut ≠ Gagné/Perdu)',  format: c => fmtEUR(c.pipelineTotal) },
+  won_amount:     { label: 'Chiffre gagné',           sub: 'Σ Montant (Gagné)',                  format: c => fmtEUR(c.wonTotal) },
+  weighted:       { label: 'Pipeline pondéré',        sub: 'Σ (Montant × Probabilité)',          format: c => fmtEUR(c.weighted) },
+  active_count:   { label: 'Opportunités actives',    sub: 'Statut ≠ Gagné / Perdu',             format: c => fmtNum(c.activeCount) },
+  avg_basket:     { label: 'Panier moyen',            sub: 'Σ Montant / opps avec montant',      format: c => c.avgBasket > 0 ? fmtEUR(c.avgBasket) : '—' },
+  sales_cycle:    { label: 'Cycle de vente moyen',    sub: 'Jours entre création et Gagné',      format: c => c.salesCycle != null ? `${Math.round(c.salesCycle)} <small>j</small>` : '—' },
+  velocity:       { label: 'Vélocité commerciale',    sub: '(Opps × Panier × WR) / Cycle',       format: c => c.velocity > 0 ? `${fmtEUR(c.velocity)} <small>/jour</small>` : '—' },
+  new_opps_30d:   { label: 'Nouvelles opps (30j)',    sub: 'Créées dans les 30 derniers jours',  format: c => fmtNum(c.newOpps30d) },
+  lost_amount:    { label: 'Chiffre perdu',           sub: 'Σ Montant (Perdu)',                  format: c => fmtEUR(c.lostTotal) },
+  biggest_won:    { label: 'Plus grosse vente',       sub: 'Max Montant (Gagné)',                format: c => c.biggestWon > 0 ? fmtEUR(c.biggestWon) : '—' },
+  biggest_open:   { label: 'Plus grosse opp ouverte', sub: 'Max Montant (actives)',              format: c => c.biggestOpen > 0 ? fmtEUR(c.biggestOpen) : '—' },
+  avg_age:        { label: 'Âge moyen opps ouvertes', sub: 'Jours depuis création',              format: c => c.avgAge != null ? `${Math.round(c.avgAge)} <small>j</small>` : '—' },
+  devis_count:    { label: 'Devis envoyés',           sub: 'Opps passées par « Devis »',         format: c => fmtNum(c.devisCount) },
+  rdv_count:      { label: 'RDV pris',                sub: 'Opps passées par « RDV prévu »',     format: c => fmtNum(c.rdvCount) },
+};
+const KPI_DEFAULT_TOP = ['pipeline', 'won_amount', 'weighted', 'active_count', 'avg_basket', 'sales_cycle'];
+
+function loadKpiSelection() {
+  try { const v = JSON.parse(localStorage.getItem(LS_KPI_TOP)); if (Array.isArray(v) && v.length) return v; } catch {}
+  return KPI_DEFAULT_TOP.slice();
+}
+function saveKpiSelection(arr) { try { localStorage.setItem(LS_KPI_TOP, JSON.stringify(arr)); } catch {} }
+function loadCustomKpis() {
+  try { const v = JSON.parse(localStorage.getItem(LS_KPI_CUSTOM)); if (Array.isArray(v)) return v; } catch {}
+  return [];
+}
+function saveCustomKpis(arr) { try { localStorage.setItem(LS_KPI_CUSTOM, JSON.stringify(arr)); } catch {} }
+let kpiSelection = loadKpiSelection();
+let customKpis = loadCustomKpis();
+
+/* ============================================================
+   FILTER + REFRESH
+============================================================ */
+function applyFilters(rows, opts = {}) {
+  let out = rows;
+  if (selectedUserId != null) out = out.filter(r => r.userId === selectedUserId);
+  if (periodMonths !== 'all') {
+    const cutoff = Date.now() - parseInt(periodMonths, 10) * 30 * 86_400_000;
+    out = out.filter(r => {
+      const d = parseDateFR(r.createdAt);
+      return d && d.getTime() >= cutoff;
+    });
+  }
+  if (!opts.skipAlertFilter && activeAlertKey && ALERT_PREDICATES[activeAlertKey]) {
+    out = out.filter(ALERT_PREDICATES[activeAlertKey]);
+  }
+  return out;
+}
+
+function refresh() {
+  const filtered = applyFilters(rawRows);
+  renderCommercials();
+  renderAlerts();
+  renderKPIs(filtered);
+  renderChart(filtered);
+  renderStatus(filtered);
+  renderTable(filtered);
+  // Subtitle
+  const sub = document.getElementById('subtitle');
+  if (selectedUserId == null) sub.textContent = "Suivi du pipeline commercial de toute l'équipe.";
+  else {
+    const u = uniqueUsers(rawRows).find(x => x.id === selectedUserId);
+    sub.textContent = u ? `Opportunités de ${u.name}` : "Filtre commercial actif";
+  }
+}
+
+/* ============================================================
+   COMMERCIAL FILTER
+============================================================ */
+function renderCommercials() {
+  const host = document.getElementById('commercialRow');
+  const users = uniqueUsers(rawRows);
+  host.innerHTML = users.map(u => {
+    const selected = selectedUserId === u.id;
+    return `<div class="commercial-pill ${selected ? 'selected' : ''}" data-user="${u.id}">
+      <span class="avatar" style="background:${avatarColor(u.id)}">${escapeHTML(initialsTxt(u.first, u.last))}</span>
+      ${escapeHTML(u.name)}
+    </div>`;
+  }).join('');
+  host.querySelectorAll('.commercial-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      const id = parseInt(p.dataset.user, 10);
+      selectedUserId = (selectedUserId === id) ? null : id;
+      refresh();
+    });
+  });
+}
+
+/* ============================================================
+   ALERTS
+============================================================ */
+function computeAlerts(rows) {
+  const active = rows.filter(isActiveStatus);
+  const total = active.length;
+  const out = [];
+  if (!total) return out;
+  const noAmount = rows.filter(ALERT_PREDICATES.noAmount);
+  if (noAmount.length) out.push({ key: 'noAmount', icon: ICONS.euro, label: 'Sans montant', count: noAmount.length });
+  const noDate = rows.filter(ALERT_PREDICATES.noDate);
+  if (noDate.length) out.push({ key: 'noDate', icon: ICONS.cal, label: 'Sans date', count: noDate.length });
+  const stale = rows.filter(ALERT_PREDICATES.stale);
+  if (stale.length) out.push({ key: 'stale', icon: ICONS.clock, label: 'À relancer (>21j)', count: stale.length });
+  const devisNoProba = rows.filter(ALERT_PREDICATES.devisNoProba);
+  if (devisNoProba.length) out.push({ key: 'devisNoProba', icon: ICONS.pct, label: 'Devis sans proba', count: devisNoProba.length });
+  const longWait = rows.filter(ALERT_PREDICATES.longWait);
+  if (longWait.length) out.push({ key: 'longWait', icon: ICONS.warn, label: 'En attente > 14j', count: longWait.length });
+  const noActivity = rows.filter(ALERT_PREDICATES.noActivity);
+  if (noActivity.length > 0 && noActivity.length / total > 0.3) {
+    out.push({ key: 'noActivity', icon: ICONS.chat, label: 'Sans commentaire', count: noActivity.length });
+  }
+  if (!out.length) out.push({ key: null, icon: ICONS.chat, label: 'Pipeline propre', count: null });
+  return out;
+}
+function renderAlerts() {
+  // Compute alerts on pool without the alert filter so all pills remain visible
+  const pool = applyFilters(rawRows, { skipAlertFilter: true });
+  const alerts = computeAlerts(pool);
+  const host = document.getElementById('alertsRow');
+  host.innerHTML = '';
+  alerts.forEach(a => {
+    const selected = activeAlertKey === a.key && a.key != null;
+    const pill = document.createElement('div');
+    pill.className = `pill ${selected ? 'selected' : ''} ${a.key == null ? 'success' : ''}`;
+    pill.innerHTML = `
+      <span class="pill-icon">${a.icon}</span>
+      <span>${escapeHTML(a.label)}</span>
+      ${a.count != null ? `<span class="pill-count">${a.count}</span>` : ''}
+    `;
+    if (a.key) {
+      pill.addEventListener('click', () => {
+        activeAlertKey = (activeAlertKey === a.key) ? null : a.key;
+        refresh();
+      });
+    }
+    host.appendChild(pill);
+  });
+}
+
+/* ============================================================
+   KPIs
+============================================================ */
+function renderKPIs(rows) {
+  const isWon  = r => r.status === 'Gagné';
+  const isLost = r => r.status === 'Perdu';
+  const active = rows.filter(isActiveStatus);
+  const won = rows.filter(isWon);
+  const lost = rows.filter(isLost);
+  const withAmount = rows.filter(r => r.amount > 0);
+
+  const pipelineTotal = active.reduce((s, r) => s + r.amount, 0);
+  const wonTotal = won.reduce((s, r) => s + r.amount, 0);
+  const weighted = active.reduce((s, r) => s + r.amount * (r.percentage / 100), 0);
+  const activeCount = active.length;
+  const avgBasket = withAmount.length > 0 ? withAmount.reduce((s, r) => s + r.amount, 0) / withAmount.length : 0;
+
+  // Conversion (cohort)
+  const closed = rows.filter(r => isWon(r) || isLost(r));
+  const closedReachedDevis = closed.filter(r => reachedStatus(r, 'Devis/Offre envoyé'));
+  const closedReachedRdv = closed.filter(r => reachedStatus(r, 'Rendez-vous prévu'));
+  const convDevis = closedReachedDevis.length > 0 ? (won.length / closedReachedDevis.length) * 100 : 0;
+  const convRdv = closedReachedRdv.length > 0 ? (won.length / closedReachedRdv.length) * 100 : 0;
+  const convAll = closed.length > 0 ? (won.length / closed.length) * 100 : 0;
+
+  // Sales cycle
+  function getWonDate(opp) {
+    if (Array.isArray(opp.history)) {
+      const entries = opp.history
+        .filter(h => (h.data_field === 'le statut' || h.data_field === 'opportunity_status') && h.value === 'Gagné')
+        .map(h => parseFlexibleDate(h.created_at))
+        .filter(Boolean);
+      if (entries.length) return new Date(Math.min(...entries.map(d => d.getTime())));
+    }
+    return parseFlexibleDate(opp.updatedAt) || null;
+  }
+  const cycles = won.map(r => {
+    const c = parseFlexibleDate(r.createdAt);
+    const w = getWonDate(r);
+    if (!c || !w) return null;
+    const d = Math.floor((w - c) / 86_400_000);
+    return d >= 0 ? d : null;
+  }).filter(d => d !== null);
+  const salesCycle = cycles.length > 0 ? cycles.reduce((s, d) => s + d, 0) / cycles.length : null;
+
+  // Other KPIs
+  const lostTotal = lost.reduce((s, r) => s + r.amount, 0);
+  const biggestWon = won.length > 0 ? Math.max(...won.map(r => r.amount)) : 0;
+  const biggestOpen = active.length > 0 ? Math.max(...active.map(r => r.amount)) : 0;
+  const newOpps30d = rows.filter(r => {
+    const d = parseFlexibleDate(r.createdAt);
+    return d && (Date.now() - d.getTime()) < 30 * 86_400_000;
+  }).length;
+  const ages = active.map(r => {
+    const d = parseFlexibleDate(r.createdAt);
+    return d ? Math.floor((Date.now() - d.getTime()) / 86_400_000) : null;
+  }).filter(d => d !== null);
+  const avgAge = ages.length ? ages.reduce((s, d) => s + d, 0) / ages.length : null;
+  const devisCount = rows.filter(r => reachedStatus(r, 'Devis/Offre envoyé')).length;
+  const rdvCount = rows.filter(r => reachedStatus(r, 'Rendez-vous prévu')).length;
+  const conv = convAll;
+  const velocity = (salesCycle && salesCycle > 0 && avgBasket > 0)
+    ? (activeCount * avgBasket * (conv / 100)) / salesCycle : 0;
+
+  const ctx = {
+    rows, active, won, lost, closed, withAmount,
+    pipelineTotal, wonTotal, weighted, activeCount, avgBasket,
+    salesCycle, lostTotal, biggestWon, biggestOpen, newOpps30d, avgAge,
+    devisCount, rdvCount, velocity,
+  };
+
+  renderKpiGridTop(ctx);
+
+  // Conversion KPIs (always rendered)
+  const setConv = (id, val, denomCount, ratioId) => {
+    document.getElementById(id).innerHTML = denomCount === 0 ? '—' : `${val.toFixed(1)} <small>%</small>`;
+    if (ratioId) document.getElementById(ratioId).textContent = denomCount === 0 ? 'Aucune donnée' : `${won.length}/${denomCount} clôturées`;
+  };
+  setConv('kpiConvAll', convAll, closed.length, 'kpiConvAllRatio');
+  setConv('kpiConvRdv', convRdv, closedReachedRdv.length, 'kpiConvRdvRatio');
+  setConv('kpiConvDevis', convDevis, closedReachedDevis.length, 'kpiConvDevisRatio');
+  setConv('kpiConv', convAll, closed.length, 'kpiConvRatio');
+}
+
+function computeCustomKpiValue(def, ctx) {
+  let pool = ctx.rows;
+  if (Array.isArray(def.statuses) && def.statuses.length) pool = pool.filter(r => def.statuses.includes(r.status));
+  if (def.type === 'count') return fmtNum(pool.length);
+  if (def.type === 'sum') {
+    const total = pool.reduce((s, r) => s + (r[def.field || 'amount'] || 0), 0);
+    return def.field === 'amount' || !def.field ? fmtEUR(total) : fmtNum(total);
+  }
+  if (def.type === 'avg') {
+    if (!pool.length) return '—';
+    const total = pool.reduce((s, r) => s + (r[def.field || 'amount'] || 0), 0);
+    const avg = total / pool.length;
+    return def.field === 'amount' || !def.field ? fmtEUR(avg) : avg.toFixed(1);
+  }
+  return '—';
+}
+
+function renderKpiGridTop(ctx) {
+  const host = document.getElementById('kpiGridTop');
+  if (!host) return;
+  const allCustomIds = customKpis.map(k => 'custom:' + k.id);
+  const validIds = [...Object.keys(KPI_LIBRARY), ...allCustomIds];
+  const selected = kpiSelection.filter(id => validIds.includes(id));
+  const cols = selected.length >= 8 ? 4 : 3;
+  host.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  host.innerHTML = selected.map(id => {
+    let label, sub, value;
+    if (id.startsWith('custom:')) {
+      const def = customKpis.find(k => 'custom:' + k.id === id);
+      if (!def) return '';
+      label = def.name; sub = `Personnalisé · ${def.type}`;
+      value = computeCustomKpiValue(def, ctx);
+    } else {
+      const def = KPI_LIBRARY[id];
+      if (!def) return '';
+      label = def.label; sub = def.sub;
+      value = def.format(ctx);
+    }
+    return `<div class="card kpi">
+      <div class="label">${escapeHTML(label)} <span class="help">?<span class="tip">${escapeHTML(sub)}</span></span></div>
+      <div class="value">${value}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   CHART
+============================================================ */
+function renderChart(rows) {
+  const months = {};
+  rows.forEach(r => {
+    const d = parseDateFR(r.createdAt);
+    if (!d) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (!months[key]) months[key] = { total: 0, byStatus: {} };
+    months[key].total += r.amount;
+    months[key].byStatus[r.status] = (months[key].byStatus[r.status] || 0) + r.amount;
+  });
+  const sortedKeys = Object.keys(months).sort();
+  const mLabels = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+  const labels = sortedKeys.map(k => {
+    const [y, m] = k.split('-');
+    return `${mLabels[parseInt(m, 10) - 1]} ${y.slice(2)}`;
+  });
+
+  const ctx = document.getElementById('pipelineChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  if (chartMode === 'cumul') {
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Pipeline créé',
+          data: sortedKeys.map(k => months[k].total),
+          borderColor: '#1c8fd6',
+          backgroundColor: 'rgba(28,143,214,0.08)',
+          fill: true, tension: 0.3, borderWidth: 2,
+          pointBackgroundColor: '#1c8fd6', pointRadius: 4,
+        }]
+      },
+      options: chartOptions()
+    });
+  } else {
+    const allStatuses = STATUS_ORDER.filter(s => sortedKeys.some(k => months[k].byStatus[s]));
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: allStatuses.map(s => ({
+          label: s,
+          data: sortedKeys.map(k => months[k].byStatus[s] || 0),
+          backgroundColor: STATUS_COLOR[s] || '#ccc',
+          stack: 'stack0',
+        }))
+      },
+      options: chartOptions(true)
+    });
+  }
+}
+function chartOptions(stacked) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, color: '#6a7080' } },
+      tooltip: { callbacks: { label: c => `${c.dataset.label || 'Pipeline'}: ${fmtEUR(c.parsed.y)}` } }
+    },
+    scales: {
+      x: { stacked: !!stacked, grid: { display: false }, ticks: { font: { size: 11 }, color: '#6a7080' } },
+      y: { stacked: !!stacked, beginAtZero: true, grid: { color: '#f0f1f4' }, ticks: { font: { size: 11 }, color: '#6a7080', callback: v => fmtEUR(v) } }
+    }
+  };
+}
+
+/* ============================================================
+   STATUS DISTRIBUTION
+============================================================ */
+function renderStatus(rows) {
+  const counts = {};
+  rows.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
+  const max = Math.max(1, ...Object.values(counts));
+  const host = document.getElementById('statusRows');
+  host.innerHTML = '';
+  STATUS_ORDER.forEach(s => {
+    const c = counts[s] || 0;
+    const pct = c > 0 ? (c / max) * 100 : 0;
+    const row = document.createElement('div');
+    row.className = 'status-row';
+    row.innerHTML = `
+      <div class="status-name"><span class="dot" style="background:${STATUS_COLOR[s] || '#ccc'}"></span>${escapeHTML(s)}</div>
+      <div class="status-bar"><div class="fill" style="width:${pct}%; background:${STATUS_COLOR[s] || '#ccc'}"></div></div>
+      <div class="status-count">${c} opp${c > 1 ? 's' : ''}</div>
+    `;
+    host.appendChild(row);
+  });
+}
+
+/* ============================================================
+   TABLE
+============================================================ */
+function renderTable(rows) {
+  const body = document.getElementById('oppBody');
+  document.getElementById('oppCount').textContent = rows.length;
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">Aucune opportunité pour ces filtres.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.slice().sort((a, b) => {
+    const da = parseDateFR(a.createdAt); const db = parseDateFR(b.createdAt);
+    if (!da && !db) return 0;
+    if (!da) return 1; if (!db) return -1;
+    return db - da;
+  }).map(r => `
+    <tr>
+      <td><strong>${escapeHTML(r.company || '—')}</strong></td>
+      <td>${escapeHTML(r.contact || '—')}</td>
+      <td>
+        <span class="user-pill">
+          <span class="avatar" style="background:${avatarColor(r.userId)}">${escapeHTML(initialsTxt(r.userFirst, r.userLast))}</span>
+          ${escapeHTML(r.userName)}
+        </span>
+      </td>
+      <td style="color:var(--text-muted)">${escapeHTML(r.source || '—')}</td>
+      <td class="num">${r.amount > 0 ? `<strong>${fmtEUR(r.amount)}</strong>` : '<span style="color:var(--text-faint)">—</span>'}</td>
+      <td class="num">${r.percentage > 0 ? r.percentage + '%' : '<span style="color:var(--text-faint)">—</span>'}</td>
+      <td><span class="badge" style="background:${STATUS_COLOR[r.status] || '#f4f5f7'}33; border-color:${STATUS_COLOR[r.status] || '#e3e4ea'};">${escapeHTML(r.status)}</span></td>
+      <td style="color:var(--text-muted)">${escapeHTML(r.createdAt || '—')}</td>
+    </tr>
+  `).join('');
+}
+
+/* ============================================================
+   EVENTS — Filters
+============================================================ */
+document.getElementById('resetBtn').addEventListener('click', () => {
+  selectedUserId = null; activeAlertKey = null; refresh();
+});
+document.getElementById('periodFilter').addEventListener('change', e => {
+  periodMonths = e.target.value;
+  refresh();
+});
+document.querySelectorAll('.tabs .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tabs .tab').forEach(x => x.classList.toggle('active', x === t));
+    chartMode = t.dataset.mode;
+    refresh();
+  });
+});
+
+/* ============================================================
+   EVENTS — Import modal
+============================================================ */
+const importBackdrop = document.getElementById('importBackdrop');
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importTextarea').value = '';
+  document.getElementById('importAlert').innerHTML = '';
+  importBackdrop.classList.add('show');
+});
+document.getElementById('importClose').addEventListener('click', () => importBackdrop.classList.remove('show'));
+importBackdrop.addEventListener('click', e => { if (e.target === importBackdrop) importBackdrop.classList.remove('show'); });
+document.getElementById('importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { document.getElementById('importTextarea').value = ev.target.result; };
+  reader.readAsText(file);
+});
+document.getElementById('importApplyBtn').addEventListener('click', () => {
+  const txt = document.getElementById('importTextarea').value.trim();
+  const alertBox = document.getElementById('importAlert');
+  if (!txt) { alertBox.innerHTML = '<div class="alert-box error">Le JSON est vide.</div>'; return; }
+  try {
+    const data = JSON.parse(txt);
+    if (!data || !Array.isArray(data.opportunities)) {
+      alertBox.innerHTML = '<div class="alert-box error">Format invalide. Attendu : <code>{ "opportunities": [...] }</code></div>';
+      return;
+    }
+    rawData = data;
+    rawRows = normalizeData(data);
+    saveData(data);
+    selectedUserId = null; activeAlertKey = null;
+    refresh();
+    alertBox.innerHTML = `<div class="alert-box success">${rawRows.length} opportunités importées avec succès.</div>`;
+    setTimeout(() => importBackdrop.classList.remove('show'), 1200);
+  } catch (err) {
+    alertBox.innerHTML = `<div class="alert-box error">JSON invalide : ${escapeHTML(err.message)}</div>`;
+  }
+});
+document.getElementById('importResetBtn').addEventListener('click', () => {
+  if (!confirm('Réinitialiser aux données par défaut ?')) return;
+  resetData();
+  rawData = loadData();
+  rawRows = normalizeData(rawData);
+  selectedUserId = null; activeAlertKey = null;
+  refresh();
+  document.getElementById('importAlert').innerHTML = '<div class="alert-box success">Données réinitialisées.</div>';
+  setTimeout(() => importBackdrop.classList.remove('show'), 1000);
+});
+
+/* ============================================================
+   EVENTS — KPI customize modal
+============================================================ */
+const kpicBackdrop = document.getElementById('kpicBackdrop');
+document.getElementById('kpiCustomizeBtn').addEventListener('click', () => {
+  kpicBackdrop.classList.add('show');
+  renderKpicBody();
+});
+document.getElementById('kpicCloseBtn').addEventListener('click', () => kpicBackdrop.classList.remove('show'));
+kpicBackdrop.addEventListener('click', e => { if (e.target === kpicBackdrop) kpicBackdrop.classList.remove('show'); });
+document.getElementById('kpicSaveBtn').addEventListener('click', () => {
+  saveKpiSelection(kpiSelection);
+  saveCustomKpis(customKpis);
+  kpicBackdrop.classList.remove('show');
+  refresh();
+  toast('KPIs mis à jour');
+});
+
+function renderKpicBody() {
+  const body = document.getElementById('kpicBody');
+  const stdItems = Object.entries(KPI_LIBRARY).map(([id, def]) => {
+    const on = kpiSelection.includes(id);
+    return `<div class="kpic-row" data-id="${id}">
+      <div>
+        <div class="ki-title">${escapeHTML(def.label)}</div>
+        <div class="ki-sub">${escapeHTML(def.sub)}</div>
+      </div>
+      <div class="ki-actions"><div class="ki-toggle ${on ? 'on' : ''}"></div></div>
+    </div>`;
+  }).join('');
+  const customItems = customKpis.map(k => {
+    const id = 'custom:' + k.id;
+    const on = kpiSelection.includes(id);
+    const fmtType = { count: 'Nombre', sum: 'Somme', avg: 'Moyenne' }[k.type] || k.type;
+    const statusTxt = (k.statuses && k.statuses.length) ? `· ${k.statuses.join(' / ')}` : '· tous statuts';
+    return `<div class="kpic-row" data-id="${id}">
+      <div>
+        <div class="ki-title">${escapeHTML(k.name)}</div>
+        <div class="ki-sub">${fmtType} ${k.field ? `· ${k.field}` : ''} ${escapeHTML(statusTxt)}</div>
+      </div>
+      <div class="ki-actions">
+        <button class="ki-del" data-del-custom="${k.id}" title="Supprimer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+        <div class="ki-toggle ${on ? 'on' : ''}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  const STATUS_OPTS = ['Nouveau','Rendez-vous prévu','Devis/Offre envoyé','En attente/à relancer','Gagné','Perdu'];
+  body.innerHTML = `
+    <div class="kpic-section-title">KPIs standards</div>
+    ${stdItems}
+    <div class="kpic-section-title">KPIs personnalisés</div>
+    ${customItems || '<div style="color:var(--text-muted); font-size:12.5px; padding:8px 0;">Aucun KPI personnalisé pour l\'instant.</div>'}
+    <div class="kpic-custom-form" id="kpicCustomForm">
+      <input type="text" class="full" id="kpicCustomName" placeholder="Nom du KPI (ex : Pipeline en attente)">
+      <select id="kpicCustomType">
+        <option value="count">Compter (nombre)</option>
+        <option value="sum">Sommer un montant</option>
+        <option value="avg">Moyenne d'un montant</option>
+      </select>
+      <select id="kpicCustomStatus">
+        <option value="">Tous les statuts</option>
+        ${STATUS_OPTS.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('')}
+      </select>
+      <button class="add-btn" id="kpicCustomAdd" type="button">+ Créer ce KPI personnalisé</button>
+    </div>
+  `;
+  body.querySelectorAll('.kpic-row').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.ki-del')) return;
+      const id = row.dataset.id;
+      const toggle = row.querySelector('.ki-toggle');
+      const isOn = kpiSelection.includes(id);
+      if (isOn) { kpiSelection = kpiSelection.filter(x => x !== id); toggle.classList.remove('on'); }
+      else { kpiSelection.push(id); toggle.classList.add('on'); }
+    });
+  });
+  body.querySelectorAll('[data-del-custom]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.delCustom;
+      customKpis = customKpis.filter(k => k.id !== id);
+      kpiSelection = kpiSelection.filter(x => x !== 'custom:' + id);
+      renderKpicBody();
+    });
+  });
+  document.getElementById('kpicCustomAdd').addEventListener('click', () => {
+    const name = document.getElementById('kpicCustomName').value.trim();
+    const type = document.getElementById('kpicCustomType').value;
+    const status = document.getElementById('kpicCustomStatus').value;
+    if (!name) { alert('Donne un nom à ton KPI.'); return; }
+    const def = { id: 'k_' + Date.now().toString(36), name, type, field: 'amount', statuses: status ? [status] : [] };
+    customKpis.push(def);
+    kpiSelection.push('custom:' + def.id);
+    renderKpicBody();
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (importBackdrop.classList.contains('show')) importBackdrop.classList.remove('show');
+    if (kpicBackdrop.classList.contains('show')) kpicBackdrop.classList.remove('show');
+  }
+});
+
+/* Init */
+refresh();
+</script>
+</body>
+</html>

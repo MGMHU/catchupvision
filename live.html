@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Catch Up — Live</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --border: #e3e4ea;
+    --border-strong: #d6d8e0;
+    --text: #1a1a1f;
+    --text-muted: #6a7080;
+    --text-faint: #a4a8b3;
+    --shadow: 0 1px 2px rgba(16, 17, 21, 0.04);
+    --shadow-card: 0 10px 28px rgba(16, 17, 21, 0.08);
+
+    --brand-1: #1c8fd6;
+    --brand-2: #4cb3ad;
+    --won: #1f9c52;
+    --won-soft: #d9f5e3;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv02', 'cv11', 'tnum';
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  body { height: 100vh; width: 100vw; }
+
+  .live-shell {
+    height: 100vh; width: 100vw;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: clamp(14px, 1.4vw, 22px);
+    padding: clamp(18px, 1.6vw, 28px) clamp(20px, 1.8vw, 36px);
+  }
+
+  /* ===== Header ===== */
+  .live-header { display: flex; align-items: center; gap: clamp(14px, 1.4vw, 22px); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { width: clamp(34px, 2.6vw, 44px); height: clamp(34px, 2.6vw, 44px); display: inline-flex; }
+  .brand-logo svg { width: 100%; height: 100%; }
+  .brand-name { font-size: clamp(15px, 1.2vw, 19px); font-weight: 700; letter-spacing: -0.01em; line-height: 1; }
+  .brand-sub { font-size: clamp(10.5px, 0.78vw, 12.5px); color: var(--text-muted); margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 12px; border-radius: 999px;
+    background: #fff; border: 1px solid var(--border);
+    color: var(--text); font-weight: 600; font-size: clamp(11px, 0.85vw, 13px);
+    letter-spacing: 0.04em;
+  }
+  .live-badge .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #d04545;
+    box-shadow: 0 0 0 0 rgba(208, 69, 69, 0.6);
+    animation: dotPulse 1.6s ease-out infinite;
+  }
+  @keyframes dotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(208, 69, 69, 0.6); }
+    70% { box-shadow: 0 0 0 9px rgba(208, 69, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(208, 69, 69, 0); }
+  }
+  .stats-strip { margin-left: auto; display: flex; align-items: center; gap: clamp(10px, 0.9vw, 14px); font-variant-numeric: tabular-nums; }
+  .stat-cell {
+    position: relative;
+    display: flex; align-items: center; gap: clamp(8px, 0.7vw, 12px);
+    padding: clamp(8px, 0.7vw, 12px) clamp(12px, 1vw, 16px);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    min-width: clamp(130px, 9vw, 160px);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .stat-cell.bump { animation: statBump 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes statBump {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  .stat-cell.won-cell {
+    background: linear-gradient(135deg, #fff 0%, #f4fbf6 100%);
+    border-color: rgba(31, 156, 82, 0.25);
+  }
+  .stat-icon {
+    width: clamp(30px, 2.4vw, 38px); height: clamp(30px, 2.4vw, 38px);
+    border-radius: 10px;
+    background: #f4f5f7;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .stat-icon svg { width: 56%; height: 56%; stroke-width: 1.8; }
+  .stat-cell.won-cell .stat-icon { background: rgba(31, 156, 82, 0.12); color: var(--won); }
+  .stat-cell .stat-text { display: flex; flex-direction: column; min-width: 0; }
+  .stat-cell .v {
+    font-size: clamp(22px, 2vw, 30px);
+    font-weight: 800; letter-spacing: -0.025em;
+    color: var(--text); line-height: 1;
+  }
+  .stat-cell.won-cell .v { color: var(--won); }
+  .stat-cell .k {
+    font-size: clamp(10px, 0.72vw, 11.5px);
+    color: var(--text-muted); margin-top: 4px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    font-weight: 600; white-space: nowrap;
+  }
+  .stat-pop {
+    position: absolute; top: -8px; right: -6px;
+    font-size: 10.5px; font-weight: 800;
+    color: #fff;
+    background: var(--brand-1);
+    padding: 2px 8px; border-radius: 999px;
+    pointer-events: none;
+    box-shadow: 0 4px 10px rgba(28, 143, 214, 0.35);
+    animation: statPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .stat-cell.won-cell .stat-pop { background: var(--won); box-shadow: 0 4px 10px rgba(31, 156, 82, 0.35); }
+  @keyframes statPop {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.5); }
+    25%  { opacity: 1; transform: translateY(0) scale(1.05); }
+    70%  { opacity: 1; transform: translateY(-8px) scale(1); }
+    100% { opacity: 0; transform: translateY(-26px) scale(0.9); }
+  }
+  .clock { font-size: clamp(17px, 1.6vw, 22px); font-weight: 700; letter-spacing: -0.02em; color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; padding-left: clamp(12px, 1vw, 18px); border-left: 1px solid var(--border); margin-left: clamp(4px, 0.4vw, 8px); }
+  .clock .sec { color: var(--text-muted); font-size: 0.65em; }
+  .clock-date { font-size: clamp(10px, 0.78vw, 12px); color: var(--text-muted); margin-top: 4px; text-transform: capitalize; letter-spacing: 0.02em; }
+
+  /* ===== Network canvas ===== */
+  .network {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    min-height: 0;
+  }
+  .network::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(16, 17, 21, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 17, 21, 0.018) 1px, transparent 1px);
+    background-size: 38px 38px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .network::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle 320px at 42% 50%, rgba(28, 143, 214, 0.06), transparent 60%),
+      radial-gradient(circle 280px at 88% 50%, rgba(31, 156, 82, 0.06), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== SVG wires ===== */
+  .wires {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .wire-base {
+    stroke: var(--border-strong);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-dasharray: 5 6;
+  }
+  .wire-pulse {
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    /* dash: short visible segment + long gap (animated) */
+  }
+  .wire-pulse.brand { stroke: url(#wireGrad); filter: drop-shadow(0 0 4px rgba(28, 143, 214, 0.35)); }
+  .wire-pulse.won   { stroke: var(--won); filter: drop-shadow(0 0 4px rgba(31, 156, 82, 0.4)); }
+
+  /* ===== Stage nodes ===== */
+  .node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .node-circle {
+    width: clamp(48px, 4vw, 64px); height: clamp(48px, 4vw, 64px);
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid var(--border-strong);
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow);
+    color: var(--text-muted);
+    position: relative;
+    transition: border-color 0.5s, box-shadow 0.5s, color 0.5s, transform 0.4s;
+  }
+  .node-circle svg { width: 44%; height: 44%; stroke-width: 1.6; }
+  .node-label {
+    font-size: clamp(10.5px, 0.85vw, 13px); font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .node-meta {
+    font-size: clamp(10px, 0.7vw, 11.5px); color: var(--text-faint);
+    margin-top: -2px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .node-circle.flash {
+    border-color: var(--brand-1);
+    color: var(--brand-1);
+    box-shadow: 0 0 0 8px rgba(28, 143, 214, 0.15), var(--shadow);
+    animation: nodePop 0.6s ease;
+  }
+  .node[data-id="won"] .node-circle.flash {
+    border-color: var(--won);
+    color: var(--won);
+    box-shadow: 0 0 0 8px rgba(31, 156, 82, 0.18), var(--shadow);
+  }
+  @keyframes nodePop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+  /* Source nodes : visual variation */
+  .node[data-type="source"] .node-circle { border-style: solid; }
+  .node[data-type="source"] .node-label { color: var(--text); }
+
+  /* ===== Cards floating ===== */
+  .flow-card {
+    position: absolute;
+    width: clamp(220px, 17vw, 280px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 10px;
+    align-items: center;
+    box-shadow: var(--shadow-card);
+    z-index: 4;
+    /* top + left set by JS in % */
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    will-change: left, top, transform, opacity, filter;
+    /* default transition for left/top updates — JS overrides duration */
+    transition: opacity 0.8s ease, filter 0.9s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+  }
+  .flow-card.live { opacity: 1; }
+  .flow-card.fading { opacity: 0; filter: blur(2px); }
+
+  /* Inner wobble */
+  .flow-card .fc-inner {
+    grid-column: 1 / -1;
+    display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center;
+    animation: bob 7s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .fc-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #e8eaf0; color: var(--text-faint);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    flex-shrink: 0;
+    transition: background 0.6s ease, color 0.6s ease, filter 0.8s ease;
+    overflow: hidden;
+  }
+  .fc-avatar.silhouette svg { width: 60%; height: 60%; }
+  .fc-body { min-width: 0; }
+  .fc-name {
+    font-size: clamp(12px, 0.92vw, 14px); font-weight: 600;
+    color: var(--text); line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: filter 0.8s ease, color 0.6s ease;
+  }
+  .fc-company {
+    font-size: clamp(10.5px, 0.75vw, 12px); color: var(--text-muted);
+    margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: filter 0.8s ease;
+  }
+  .fc-meta {
+    font-size: clamp(10px, 0.7vw, 11px); color: var(--text-faint);
+    margin-top: 4px;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .fc-meta .dot { width: 2px; height: 2px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0; }
+  .fc-source-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700;
+    color: var(--text-muted);
+    background: #f4f5f7;
+    border: 1px solid var(--border);
+    padding: 1px 7px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .fc-source-tag svg { width: 9px; height: 9px; }
+  .fc-footer {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 6px; padding-top: 6px;
+    border-top: 1px solid var(--border);
+    transition: opacity 0.5s ease, max-height 0.5s ease;
+    flex-wrap: wrap;
+  }
+  .fc-footer.hidden { opacity: 0; max-height: 0; margin: 0; padding: 0; border-top-color: transparent; pointer-events: none; }
+  .user-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #f4f5f7; border: 1px solid var(--border);
+    border-radius: 999px; padding: 2px 9px 2px 2px;
+    font-size: 10.5px; color: var(--text); font-weight: 500;
+  }
+  .user-pill .ua {
+    width: 17px; height: 17px; border-radius: 50%;
+    color: #fff; font-weight: 700; font-size: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .amount-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; color: var(--text);
+    background: #fff7d6; border: 1px solid #f1dd9a;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .won-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; color: var(--won);
+    background: var(--won-soft); border: 1px solid rgba(31, 156, 82, 0.25);
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .won-tag svg { width: 10px; height: 10px; stroke-width: 2.5; }
+
+  /* Stage blur reveal */
+  .flow-card[data-stage="visit"] .fc-name,
+  .flow-card[data-stage="visit"] .fc-company { filter: blur(5px); }
+  .flow-card[data-stage="form"] .fc-company { filter: blur(2.5px); }
+  .flow-card[data-stage="email"] .fc-name { filter: blur(1.5px); }
+  .flow-card[data-stage="qualified"] .fc-name,
+  .flow-card[data-stage="qualified"] .fc-company,
+  .flow-card[data-stage="quote"] .fc-name,
+  .flow-card[data-stage="quote"] .fc-company,
+  .flow-card[data-stage="won"] .fc-name,
+  .flow-card[data-stage="won"] .fc-company { filter: blur(0); }
+
+  .flow-card[data-stage="quote"] { border-color: #d6d8e0; }
+  .flow-card[data-stage="won"] {
+    border-color: rgba(31, 156, 82, 0.5);
+    background: linear-gradient(180deg, #fff 0%, #f4fbf6 100%);
+    box-shadow: 0 10px 28px rgba(31, 156, 82, 0.16), var(--shadow);
+  }
+  .flow-card[data-stage="won"].just-won { animation: winPulse 1.6s ease-out; }
+  @keyframes winPulse {
+    0% { box-shadow: 0 0 0 0 rgba(31, 156, 82, 0.5), var(--shadow-card); }
+    50% { box-shadow: 0 0 0 18px rgba(31, 156, 82, 0), var(--shadow-card); }
+    100% { box-shadow: 0 10px 28px rgba(31, 156, 82, 0.16), var(--shadow); }
+  }
+
+  /* Confetti */
+  .confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+
+  /* ===== Floating effects (Devis envoyé / Client signé) ===== */
+  .fx-quote {
+    position: fixed;
+    transform: translate(-50%, 0);
+    background: linear-gradient(135deg, #fff7d6 0%, #fdf0b3 100%);
+    border: 1px solid #f1dd9a;
+    border-radius: 999px;
+    padding: 7px 14px 7px 12px;
+    font-size: 12.5px; font-weight: 700;
+    color: #8a6500;
+    white-space: nowrap;
+    box-shadow: 0 10px 24px rgba(240, 192, 65, 0.25), 0 2px 6px rgba(0, 0, 0, 0.05);
+    z-index: 800;
+    pointer-events: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    font-variant-numeric: tabular-nums;
+    animation: fxQuote 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .fx-quote svg { width: 13px; height: 13px; stroke-width: 2; }
+  @keyframes fxQuote {
+    0%   { opacity: 0; transform: translate(-50%, 28px) scale(0.7); }
+    18%  { opacity: 1; transform: translate(-50%, -8px) scale(1.05); }
+    35%  { transform: translate(-50%, -18px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -110px) scale(0.95); }
+  }
+
+  .fx-win {
+    position: fixed;
+    transform: translate(-50%, 0);
+    text-align: center;
+    z-index: 998;
+    pointer-events: none;
+    animation: fxWin 3.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .fx-win-amount {
+    font-size: clamp(28px, 3.4vw, 52px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #1f9c52 0%, #4cb3ad 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    filter: drop-shadow(0 4px 14px rgba(31, 156, 82, 0.4));
+  }
+  .fx-win-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 8px;
+    font-size: clamp(11px, 0.9vw, 13px); font-weight: 700;
+    color: var(--won);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    background: rgba(31, 156, 82, 0.10);
+    border: 1px solid rgba(31, 156, 82, 0.25);
+    padding: 4px 12px; border-radius: 999px;
+    backdrop-filter: blur(6px);
+  }
+  .fx-win-label svg { width: 11px; height: 11px; stroke-width: 2.5; }
+  @keyframes fxWin {
+    0%   { opacity: 0; transform: translate(-50%, 30px) scale(0.5); }
+    15%  { opacity: 1; transform: translate(-50%, -10px) scale(1.12); }
+    30%  { transform: translate(-50%, -24px) scale(1); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -170px) scale(0.92); }
+  }
+
+  /* Sustained glow ring around won-node when a deal is signed */
+  .node[data-id="won"] .node-circle.celebrating {
+    animation: wonHalo 2.4s ease-out;
+  }
+  @keyframes wonHalo {
+    0%   { box-shadow: 0 0 0 0   rgba(31, 156, 82, 0.45), var(--shadow); border-color: var(--won); color: var(--won); }
+    60%  { box-shadow: 0 0 0 40px rgba(31, 156, 82, 0),  var(--shadow); border-color: var(--won); color: var(--won); }
+    100% { box-shadow: 0 0 0 0   rgba(31, 156, 82, 0),   var(--shadow); border-color: var(--border-strong); color: var(--text-muted); }
+  }
+
+  @media (max-width: 1100px) {
+    .stats-strip { gap: 14px; }
+    .stat-cell .v { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+
+<div class="live-shell">
+
+  <!-- ===== Header ===== -->
+  <header class="live-header">
+    <div class="brand">
+      <span class="brand-logo">
+        <svg viewBox="0 0 107.34 115.85" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="live_g1" x1="-74.4" y1="-149.95" x2="63.39" y2="12.58" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#435d9c"/><stop offset=".24" stop-color="#4577a1"/><stop offset=".66" stop-color="#4aa2a9"/><stop offset=".88" stop-color="#4cb3ad"/></linearGradient>
+            <linearGradient id="live_g2" x1="23.36" y1="75.43" x2="122.15" y2="130.65" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00aae9"/><stop offset=".4" stop-color="#176bba"/><stop offset=".72" stop-color="#284099"/><stop offset=".88" stop-color="#2f308d"/></linearGradient>
+            <linearGradient id="live_g3" x1="28.45" y1="8.49" x2="61.31" y2="19.3" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a8ba1"/><stop offset=".05" stop-color="#1e8da1"/><stop offset=".6" stop-color="#49aaa9"/><stop offset=".88" stop-color="#5ab6ad"/></linearGradient>
+            <linearGradient id="live_g4" x1="20.54" y1="77.29" x2="21.91" y2="12.01" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3974b7"/><stop offset=".94" stop-color="#4dafc5"/></linearGradient>
+          </defs>
+          <path d="M97.55,51.06c-5.4,0-9.79,4.39-9.79,9.79s4.39,9.79,9.79,9.79,9.79-4.39,9.79-9.79-4.39-9.79-9.79-9.79Z" fill="url(#live_g1)"/>
+          <path d="M30.67,28.1c3.69-3.61,8.12-6.49,13.12-8.39.66-.26,1.29-.48,1.9-.66.45-.16.93-.3,1.41-.42.42-.13.79-.22,1.15-.29.25-.07.5-.13.75-.18.31-.08.63-.14.94-.2.26-.06.55-.12.87-.16.45-.08.9-.16,1.36-.21.54-.08,1.06-.15,1.58-.19.55-.06,1.15-.1,1.76-.13h.1c.62-.04,1.27-.06,2.03-.06,9.61,0,18.31,3.34,25.17,9.66,2.62,2.42,6.65,2.63,9.57.51l8.5-6.18C90.36,7.7,74.43,0,56.81,0,25.49,0,0,25.95,0,57.84c0,.56,0,1.12.03,1.66,0,.64.04,1.25.08,1.88.02.38.06.77.09,1.16,3.75-13.87,15.93-26.42,30.48-34.43h-.01Z" fill="url(#live_g2)"/>
+          <path d="M48.19,115.16c.82.13,1.51.22,2.15.29.64.08,1.23.13,1.82.18l.24.02c.7.05,1.41.09,2.11.12.79.04,1.55.05,2.3.05,17.62,0,33.55-7.69,44.09-21.2l-8.51-6.18c-2.92-2.12-6.94-1.91-9.56.51-6.88,6.33-15.64,9.68-25.34,9.68-.66,0-1.26-.02-1.83-.05-.18,0-.35,0-.48-.02-.55-.02-1.09-.07-1.64-.12-.12,0-.25-.02-.37-.04-.59-.06-1.21-.14-1.89-.25-.53-.07-1.07-.17-1.6-.29-.75-.14-1.58-.34-2.4-.56-.61-.17-1.2-.34-1.79-.53-.56-.18-1.12-.37-1.66-.58l-.43-.17c-.51-.2-1.05-.42-1.58-.66-.58-.25-1.22-.56-1.9-.92-.38-.19-.79-.41-1.2-.65-.29-.16-.57-.32-.85-.49-.72-.41-1.51-.92-2.3-1.49-.23-.15-.52-.36-.82-.59-1.18-.86-2.37-1.85-3.46-2.9-.22-.21-.45-.43-.67-.66-.29-.29-.59-.59-.87-.9-.23-.23-.46-.48-.7-.76-.87-.96-1.72-2.01-2.52-3.13.83,3.66,2.06,8.02,3.91,12.53,2.67,6.51,6.64,13.3,12.59,18.72,1.56.39,3.15.73,4.76.99l.39.07v-.02Z" fill="url(#live_g3)"/>
+          <path d="M30.45,95.39c-1.86-4.51-3.08-8.87-3.91-12.53-.05-.07-.11-.14-.16-.21-.28-.35-.53-.72-.78-1.12-.52-.77-1.02-1.57-1.43-2.32-.17-.27-.35-.61-.53-.94-.15-.28-.31-.58-.46-.88l-.44-.9c-2.73-5.69-4.17-12.12-4.17-18.65,0-11.68,4.5-22.28,12.11-29.73-1.04.57-2.08,1.17-3.1,1.79-1.07.66-2.12,1.34-3.15,2.05-2.87,1.91-5.58,4.02-8.1,6.28-1.14,1.03-2.26,2.08-3.31,3.17-3.97,4.05-7.3,8.5-9.71,13.2-.32.62-.63,1.25-.92,1.89-.58,1.27-1.09,2.55-1.52,3.84-.25.74-.47,1.47-.67,2.21.16,1.95.42,3.93.79,5.99l.46,2.29c4.82,21.56,20.89,38.09,41.6,43.29-5.95-5.42-9.92-12.21-12.59-18.72h0Z" fill="url(#live_g4)"/>
+        </svg>
+      </span>
+      <div>
+        <div class="brand-name">Catch Up</div>
+        <div class="brand-sub">Live</div>
+      </div>
+    </div>
+    <div class="live-badge"><span class="pulse-dot"></span> EN DIRECT</div>
+
+    <div class="stats-strip">
+      <div class="stat-cell" id="cellVisits">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/></svg>
+        </div>
+        <div class="stat-text">
+          <div class="v" id="sVisits">0</div>
+          <div class="k">Visites identifiées</div>
+        </div>
+      </div>
+      <div class="stat-cell" id="cellForms">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        </div>
+        <div class="stat-text">
+          <div class="v" id="sForms">0</div>
+          <div class="k">Formulaires</div>
+        </div>
+      </div>
+      <div class="stat-cell" id="cellReplies">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+        </div>
+        <div class="stat-text">
+          <div class="v" id="sReplies">0</div>
+          <div class="k">Réponses email</div>
+        </div>
+      </div>
+      <div class="stat-cell won-cell" id="cellWon">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        </div>
+        <div class="stat-text">
+          <div class="v" id="sWon">0</div>
+          <div class="k">Clients signés</div>
+        </div>
+      </div>
+      <div>
+        <div class="clock" id="clock">--:--<span class="sec" id="clockSec">:--</span></div>
+        <div class="clock-date" id="clockDate">—</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Network canvas ===== -->
+  <div class="network" id="network">
+    <svg class="wires" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="wireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"  stop-color="#1c8fd6" stop-opacity="0.0"/>
+          <stop offset="50%" stop-color="#1c8fd6" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#4cb3ad" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Base wires (dashed) -->
+      <line class="wire-base" x1="11%" y1="24%" x2="42%" y2="50%"/>
+      <line class="wire-base" x1="11%" y1="50%" x2="42%" y2="50%"/>
+      <line class="wire-base" x1="11%" y1="76%" x2="42%" y2="50%"/>
+      <line class="wire-base" x1="42%" y1="50%" x2="65%" y2="50%"/>
+      <line class="wire-base" x1="65%" y1="50%" x2="88%" y2="50%"/>
+
+      <!-- Animated pulses overlay (multiple, varied) -->
+      <!-- Each pulse line uses stroke-dasharray + animated dashoffset to simulate a moving spark -->
+      <line class="wire-pulse brand p-s1" x1="11%" y1="24%" x2="42%" y2="50%"/>
+      <line class="wire-pulse brand p-s2" x1="11%" y1="50%" x2="42%" y2="50%"/>
+      <line class="wire-pulse brand p-s3" x1="11%" y1="76%" x2="42%" y2="50%"/>
+      <line class="wire-pulse brand p-q1" x1="42%" y1="50%" x2="65%" y2="50%"/>
+      <line class="wire-pulse won   p-w1" x1="65%" y1="50%" x2="88%" y2="50%"/>
+    </svg>
+
+    <!-- Source nodes (left) -->
+    <div class="node" data-type="source" data-id="visit" style="left: 11%; top: 24%;">
+      <div class="node-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/></svg>
+      </div>
+      <div class="node-label">Visite identifiée</div>
+      <div class="node-meta">Snitcher · suivi anonyme</div>
+    </div>
+    <div class="node" data-type="source" data-id="form" style="left: 11%; top: 50%;">
+      <div class="node-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      </div>
+      <div class="node-label">Formulaire web</div>
+      <div class="node-meta">Landing page / site</div>
+    </div>
+    <div class="node" data-type="source" data-id="email" style="left: 11%; top: 76%;">
+      <div class="node-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+      </div>
+      <div class="node-label">Réponse campagne</div>
+      <div class="node-meta">Email sortant</div>
+    </div>
+
+    <!-- Pipeline nodes (right) -->
+    <div class="node" data-id="qualified" style="left: 42%; top: 50%;">
+      <div class="node-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+      <div class="node-label">Qualifié</div>
+      <div class="node-meta">Commercial assigné</div>
+    </div>
+    <div class="node" data-id="quote" style="left: 65%; top: 50%;">
+      <div class="node-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+      </div>
+      <div class="node-label">Devis envoyé</div>
+      <div class="node-meta">Offre transmise</div>
+    </div>
+    <div class="node" data-id="won" style="left: 88%; top: 50%;">
+      <div class="node-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      </div>
+      <div class="node-label">Client signé</div>
+      <div class="node-meta">Deal gagné</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============= Wire pulse animation (compute lengths + dynamic style) ============= */
+function setupWirePulses() {
+  // Read each wire-pulse <line>, compute its length, set stroke-dasharray and animation
+  const network = document.getElementById('network');
+  const wires = network.querySelectorAll('.wire-pulse');
+  // Wait a frame so % coords resolve to px
+  requestAnimationFrame(() => {
+    wires.forEach((el, i) => {
+      const len = el.getTotalLength ? el.getTotalLength() : 200;
+      // Visible spark = 8% of line length, gap = rest
+      const sparkLen = Math.max(20, len * 0.08);
+      const gap = len - sparkLen;
+      el.style.strokeDasharray = `${sparkLen} ${gap}`;
+      el.style.strokeDashoffset = `${len}`;
+      // Animation duration: longer for slower flow
+      const dur = 6 + (i % 3);  // 6-8s
+      const delay = -((i * 1.7) % dur);
+      el.style.animation = `wirePulse${i} ${dur}s linear ${delay}s infinite`;
+      // Insert keyframes dynamically (different total length per wire)
+      const styleSheet = document.styleSheets[0];
+      try {
+        styleSheet.insertRule(`
+          @keyframes wirePulse${i} {
+            from { stroke-dashoffset: ${len}; }
+            to   { stroke-dashoffset: ${-len * 0.001}; }
+          }
+        `, styleSheet.cssRules.length);
+      } catch (e) {}
+    });
+  });
+}
+window.addEventListener('load', setupWirePulses);
+window.addEventListener('resize', () => {
+  // Recompute on resize
+  const wires = document.querySelectorAll('.wire-pulse');
+  wires.forEach(el => { el.style.animation = 'none'; });
+  setTimeout(setupWirePulses, 50);
+});
+
+/* ============= Data ============= */
+const COMPANIES = [
+  'Instalatec','Sodeplast','Komax France','HERVE THERMIQUE','CALVET',
+  'ELECTRIS','REFRITECH OI','MEDICOS','MAXEI','Acciona Energia',
+  'HEF PHOTONICS','AQMO','TIBSHORE AFRIK','CORPORATE M&M','Vicat Saint Egrève',
+  'SARL SAVART','QUARK REFRIGERATION','EMITECH SAS','Bionov','Absolut System',
+  'LES GRANDS CHAIS','Illuminated Extractors','Art en Harmonie','Pablo Lopez SARL'
+];
+const CONTACTS = [
+  ['Eric','Painchault'],['Amaury','Teillol'],['Marion','Forges'],['Toni','Cadeau'],
+  ['Christophe','Rey'],['Natanael','Bouskila'],['Arnaud','Chéri'],['Philippe','Waille'],
+  ['Richard','Debiak'],['Hugo','Pradier'],['Antoine','Trébaul'],['Lucas','Martinoff'],
+  ['Benjamin','Opara'],['Nassim','Zizi'],['Pascal','Lejour'],['Léoni','Savart'],
+  ['Didier','Thomas'],['Yannick','Lelarge'],['Jean-Michel','Costes'],['Léa','Yvernault']
+];
+const TEAM = [
+  { id: 1, name: 'Sophie Martin',     initials: 'SM', color: '#4cb3ad' },
+  { id: 2, name: 'Gaëtan Tourniaire', initials: 'GT', color: '#1c8fd6' },
+  { id: 3, name: 'Manuel Alves',      initials: 'MA', color: '#4dafc5' },
+  { id: 4, name: 'Grégory Saillard',  initials: 'GS', color: '#5ab6ad' },
+  { id: 5, name: 'Julie Teixeira',    initials: 'JT', color: '#3974b7' },
+];
+const PAGES = ['/produits', '/location', '/tarifs', '/contact', '/groupe-froid', '/case-studies'];
+const FORM_SOURCES = ['Landing page Location', 'Form Website', 'LinkedIn Ads', 'SEO produit'];
+const CAMPAIGNS = ['Haute saison BTP', 'Réveil clients dormants', 'Onboarding nouveaux clients', 'Cross-sell maintenance'];
+const PRODUCTS = ['Groupe froid 50kW', 'Location annuelle', 'Maintenance', 'Audit énergétique', 'Devis sur-mesure'];
+const COUNTRIES = ['FR','FR','FR','FR','BE','CH','DE'];
+
+const SILHOUETTE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 22a8 8 0 0 1 16 0"/></svg>';
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const SOURCE_ICON = {
+  visit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>',
+  form:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8"/></svg>',
+  email: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>',
+};
+const SOURCE_LABEL = { visit: 'Visite', form: 'Formulaire', email: 'Réponse mail' };
+
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function rnd(a,b){return Math.random()*(b-a)+a}
+function fmtEUR(n){return Math.round(n).toLocaleString('fr-FR')+' €'}
+
+/* ============= Stats ============= */
+const stats = { visits: 0, forms: 0, replies: 0, won: 0 };
+function tweenNumber(el, to, dur = 600) {
+  const from = parseInt(el.textContent.replace(/\D/g, ''), 10) || 0;
+  if (from === to) return;
+  const start = performance.now();
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  function step(now) {
+    const p = Math.min(1, (now - start) / dur);
+    el.textContent = Math.round(from + (to - from) * ease(p)).toLocaleString('fr-FR');
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function refreshStats() {
+  tweenNumber(document.getElementById('sVisits'), stats.visits);
+  tweenNumber(document.getElementById('sForms'),  stats.forms);
+  tweenNumber(document.getElementById('sReplies'),stats.replies);
+  tweenNumber(document.getElementById('sWon'),    stats.won);
+}
+/* Bump animation + "+1" pop badge on a stat cell */
+function bumpStat(cellId, label = '+1') {
+  const cell = document.getElementById(cellId);
+  if (!cell) return;
+  cell.classList.remove('bump');
+  void cell.offsetWidth;
+  cell.classList.add('bump');
+  const pop = document.createElement('div');
+  pop.className = 'stat-pop';
+  pop.textContent = label;
+  cell.appendChild(pop);
+  setTimeout(() => { pop.remove(); }, 1200);
+  setTimeout(() => cell.classList.remove('bump'), 800);
+}
+
+/* ============= Source definitions ============= */
+const SOURCES = [
+  { id: 'visit', y: 24, qualifyProb: 0.30 },
+  { id: 'form',  y: 50, qualifyProb: 0.62 },
+  { id: 'email', y: 76, qualifyProb: 0.78 },
+];
+const SOURCE_X = 11;
+const QUAL_X = 42, QUAL_Y = 50;
+const QUOTE_X = 65, QUOTE_Y = 50;
+const WON_X = 88, WON_Y = 50;
+
+/* Travel timings — slow */
+const LEG_DURATION = { srcToQual: 14000, qualToQuote: 12000, quoteToWon: 11000 };
+const PAUSE = 1800; // pause at each node
+const SLEEP_AT_SOURCE = 1200; // small dwell at source for entrance reveal
+
+/* Stage transition probabilities */
+const PROB = { qualToQuote: 0.55, quoteToWon: 0.40 };
+
+/* ============= Card factory ============= */
+let cardId = 0;
+function buildCardData() {
+  const company = pick(COMPANIES);
+  const [first, last] = pick(CONTACTS);
+  return {
+    id: ++cardId,
+    company,
+    contact: `${first} ${last}`,
+    initials: (first[0]+last[0]).toUpperCase(),
+    color: pick(['#4cb3ad','#1c8fd6','#5ab6ad','#3974b7','#176bba','#4aa2a9']),
+    team: pick(TEAM),
+    page: pick(PAGES),
+    pages: Math.floor(rnd(2,14)),
+    formSource: pick(FORM_SOURCES),
+    campaign: pick(CAMPAIGNS),
+    product: pick(PRODUCTS),
+    country: pick(COUNTRIES),
+    amount: Math.round(rnd(4,95)) * 1000,
+  };
+}
+
+function makeCardEl(data, sourceId) {
+  const el = document.createElement('div');
+  el.className = 'flow-card';
+  el.dataset.stage = sourceId;
+  el.dataset.id = data.id;
+  // Source variant initial content
+  let avatarHtml, nameTxt, companyTxt, metaTxt, srcTag;
+  if (sourceId === 'visit') {
+    avatarHtml = `<div class="fc-avatar silhouette">${SILHOUETTE_SVG}</div>`;
+    nameTxt = 'Société identifiée';
+    companyTxt = `Visite anonyme · ${data.country}`;
+    metaTxt = `<span>${data.page}</span><span class="dot"></span><span>${data.pages} pages vues</span>`;
+  } else if (sourceId === 'form') {
+    avatarHtml = `<div class="fc-avatar" style="background:#e8eaf0;color:var(--text-faint)">··</div>`;
+    nameTxt = data.contact;
+    companyTxt = data.company;
+    metaTxt = `<span>Formulaire</span><span class="dot"></span><span>${data.formSource}</span>`;
+  } else {
+    // email
+    avatarHtml = `<div class="fc-avatar" style="background:${data.color};color:#fff">${data.initials}</div>`;
+    nameTxt = data.contact;
+    companyTxt = data.company;
+    metaTxt = `<span>Répondu à</span><span class="dot"></span><span>«&nbsp;${data.campaign}&nbsp;»</span>`;
+  }
+  srcTag = `<span class="fc-source-tag">${SOURCE_ICON[sourceId]} ${SOURCE_LABEL[sourceId]}</span>`;
+  el.innerHTML = `
+    <div class="fc-inner">
+      ${avatarHtml}
+      <div class="fc-body">
+        <div class="fc-name">${nameTxt}</div>
+        <div class="fc-company">${companyTxt}</div>
+        <div class="fc-meta">${srcTag}<span class="dot"></span>${metaTxt}</div>
+      </div>
+      <div class="fc-footer hidden"></div>
+    </div>
+  `;
+  return el;
+}
+
+function applyQualifiedStage(card) {
+  const data = card.data;
+  const el = card.el;
+  el.dataset.stage = 'qualified';
+  const avatar = el.querySelector('.fc-avatar');
+  avatar.className = 'fc-avatar';
+  avatar.style.background = data.color;
+  avatar.style.color = '#fff';
+  avatar.textContent = data.initials;
+  el.querySelector('.fc-name').textContent = data.contact;
+  el.querySelector('.fc-company').textContent = data.company;
+  const srcTag = `<span class="fc-source-tag">${SOURCE_ICON[card.source]} ${SOURCE_LABEL[card.source]}</span>`;
+  el.querySelector('.fc-meta').innerHTML = `${srcTag}<span class="dot"></span><span>Qualifié</span>`;
+  const footer = el.querySelector('.fc-footer');
+  footer.className = 'fc-footer';
+  footer.innerHTML = `<span class="user-pill"><span class="ua" style="background:${data.team.color}">${data.team.initials}</span>${data.team.name.split(' ')[0]}</span>`;
+}
+function applyQuoteStage(card) {
+  const data = card.data;
+  const el = card.el;
+  el.dataset.stage = 'quote';
+  el.querySelector('.fc-meta').innerHTML = `<span>${data.product}</span>`;
+  const footer = el.querySelector('.fc-footer');
+  footer.className = 'fc-footer';
+  footer.innerHTML = `<span class="user-pill"><span class="ua" style="background:${data.team.color}">${data.team.initials}</span>${data.team.name.split(' ')[0]}</span><span class="amount-tag">${fmtEUR(data.amount)}</span>`;
+  quoteEffect(card);
+}
+/* Floating "Devis envoyé · €X" badge that rises above the card */
+function quoteEffect(card) {
+  const r = card.el.getBoundingClientRect();
+  const fx = document.createElement('div');
+  fx.className = 'fx-quote';
+  fx.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="9" y1="13" x2="15" y2="13"/>
+      <line x1="9" y1="17" x2="15" y2="17"/>
+    </svg>
+    Devis envoyé · ${fmtEUR(card.data.amount)}
+  `;
+  fx.style.left = (r.left + r.width / 2) + 'px';
+  fx.style.top = (r.top - 4) + 'px';
+  document.body.appendChild(fx);
+  setTimeout(() => fx.remove(), 2500);
+}
+function applyWonStage(card) {
+  const data = card.data;
+  const el = card.el;
+  el.dataset.stage = 'won';
+  el.querySelector('.fc-meta').innerHTML = `<span>${data.product}</span>`;
+  const footer = el.querySelector('.fc-footer');
+  footer.className = 'fc-footer';
+  footer.innerHTML = `<span class="user-pill"><span class="ua" style="background:${data.team.color}">${data.team.initials}</span>${data.team.name.split(' ')[0]}</span><span class="won-tag">${CHECK_SVG} ${fmtEUR(data.amount)}</span>`;
+  el.classList.add('just-won');
+  setTimeout(() => el.classList.remove('just-won'), 1600);
+  confettiAt(el);
+  winEffect(card);
+  // Sustained halo on the "won" node
+  const wonCircle = document.querySelector('.node[data-id="won"] .node-circle');
+  if (wonCircle) {
+    wonCircle.classList.remove('celebrating');
+    void wonCircle.offsetWidth;
+    wonCircle.classList.add('celebrating');
+    setTimeout(() => wonCircle.classList.remove('celebrating'), 2500);
+  }
+}
+/* Big floating "+€X / Client signé" effect above the won card */
+function winEffect(card) {
+  const r = card.el.getBoundingClientRect();
+  const fx = document.createElement('div');
+  fx.className = 'fx-win';
+  fx.innerHTML = `
+    <div class="fx-win-amount">+ ${fmtEUR(card.data.amount)}</div>
+    <div class="fx-win-label">
+      ${CHECK_SVG}
+      Client signé · ${card.data.company}
+    </div>
+  `;
+  fx.style.left = (r.left + r.width / 2) + 'px';
+  fx.style.top = (r.top - 10) + 'px';
+  document.body.appendChild(fx);
+  setTimeout(() => fx.remove(), 3300);
+}
+
+function flashNode(id) {
+  const node = document.querySelector(`.node[data-id="${id}"] .node-circle`);
+  if (!node) return;
+  node.classList.remove('flash');
+  void node.offsetWidth;
+  node.classList.add('flash');
+  setTimeout(() => node.classList.remove('flash'), 700);
+}
+
+/* ============= Card movement ============= */
+const network = document.getElementById('network');
+
+function moveCard(card, targetX, targetY, durationMs) {
+  card.el.style.transition = `left ${durationMs}ms ease-in-out, top ${durationMs}ms ease-in-out, opacity 0.8s ease, filter 0.9s ease, border-color 0.6s ease, box-shadow 0.6s ease`;
+  // Force a frame so transition picks up
+  requestAnimationFrame(() => {
+    card.el.style.left = targetX + '%';
+    card.el.style.top = targetY + '%';
+  });
+}
+
+function spawnCard() {
+  // Pick a random source (weighted slightly toward visits since they're most numerous)
+  const r = Math.random();
+  const sourceId = r < 0.45 ? 'visit' : r < 0.75 ? 'form' : 'email';
+  const source = SOURCES.find(s => s.id === sourceId);
+  const data = buildCardData();
+  const el = makeCardEl(data, sourceId);
+  const card = { id: data.id, data, el, source: sourceId, dead: false };
+
+  // Place at source position (no transition yet)
+  el.style.transition = 'opacity 0.8s ease, filter 0.9s ease, border-color 0.6s ease, box-shadow 0.6s ease';
+  el.style.left = SOURCE_X + '%';
+  el.style.top = source.y + '%';
+  network.appendChild(el);
+  void el.offsetWidth;
+
+  // Bump source stat
+  if (sourceId === 'visit') { stats.visits++;  bumpStat('cellVisits');  }
+  if (sourceId === 'form')  { stats.forms++;   bumpStat('cellForms');   }
+  if (sourceId === 'email') { stats.replies++; bumpStat('cellReplies'); }
+  refreshStats();
+  // Flash source node
+  flashNode(sourceId);
+
+  // Fade in
+  requestAnimationFrame(() => el.classList.add('live'));
+
+  // After source dwell, start moving toward Qualifié
+  setTimeout(() => {
+    if (card.dead || !el.isConnected) return;
+    moveCard(card, QUAL_X, QUAL_Y, LEG_DURATION.srcToQual);
+
+    // At arrival at Qualifié
+    setTimeout(() => {
+      if (card.dead || !el.isConnected) return;
+      if (Math.random() < source.qualifyProb) {
+        applyQualifiedStage(card);
+        flashNode('qualified');
+
+        // Pause then move to Quote (if probabilities allow)
+        setTimeout(() => {
+          if (card.dead || !el.isConnected) return;
+          if (Math.random() < PROB.qualToQuote) {
+            moveCard(card, QUOTE_X, QUOTE_Y, LEG_DURATION.qualToQuote);
+            setTimeout(() => {
+              if (card.dead || !el.isConnected) return;
+              applyQuoteStage(card);
+              flashNode('quote');
+
+              // Pause then move to Won
+              setTimeout(() => {
+                if (card.dead || !el.isConnected) return;
+                if (Math.random() < PROB.quoteToWon) {
+                  moveCard(card, WON_X, WON_Y, LEG_DURATION.quoteToWon);
+                  setTimeout(() => {
+                    if (card.dead || !el.isConnected) return;
+                    applyWonStage(card);
+                    flashNode('won');
+                    stats.won++;
+                    refreshStats();
+                    bumpStat('cellWon', '+ ' + fmtEUR(card.data.amount));
+                    // Linger then disappear
+                    setTimeout(() => fadeOutAndRemove(card), 5000);
+                  }, LEG_DURATION.quoteToWon);
+                } else {
+                  fadeOutAndRemove(card);
+                }
+              }, PAUSE);
+            }, LEG_DURATION.qualToQuote);
+          } else {
+            fadeOutAndRemove(card);
+          }
+        }, PAUSE);
+      } else {
+        // Source did not qualify — fade out
+        fadeOutAndRemove(card);
+      }
+    }, LEG_DURATION.srcToQual);
+  }, SLEEP_AT_SOURCE);
+}
+
+function fadeOutAndRemove(card) {
+  card.dead = true;
+  card.el.classList.add('fading');
+  setTimeout(() => {
+    if (card.el.parentNode) card.el.parentNode.removeChild(card.el);
+  }, 1100);
+}
+
+/* ============= Confetti (small, anchored to a card) ============= */
+const canvas = document.getElementById('confettiCanvas');
+const cctx = canvas.getContext('2d');
+let confetti = [];
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+function confettiAt(el) {
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
+  const colors = ['#4cb3ad','#1c8fd6','#1f9c52','#f0c041','#ffffff','#5ab6ad'];
+  for (let i = 0; i < 60; i++) {
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.9;
+    const sp = 3 + Math.random() * 6;
+    confetti.push({
+      x: cx, y: cy,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp,
+      g: 0.16 + Math.random() * 0.08,
+      size: 3 + Math.random() * 5,
+      color: pick(colors),
+      rot: Math.random() * Math.PI * 2,
+      vRot: (Math.random() - 0.5) * 0.3,
+      life: 100 + Math.random() * 60
+    });
+  }
+  if (!cRunning) requestAnimationFrame(drawConfetti);
+}
+let cRunning = false;
+function drawConfetti() {
+  cRunning = true;
+  cctx.clearRect(0, 0, canvas.width, canvas.height);
+  confetti = confetti.filter(p => p.life > 0);
+  confetti.forEach(p => {
+    p.vy += p.g; p.vx *= 0.99;
+    p.x += p.vx; p.y += p.vy;
+    p.rot += p.vRot; p.life--;
+    cctx.save();
+    cctx.translate(p.x, p.y); cctx.rotate(p.rot);
+    cctx.fillStyle = p.color;
+    cctx.globalAlpha = Math.max(0, p.life / 150);
+    cctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    cctx.restore();
+  });
+  if (confetti.length) requestAnimationFrame(drawConfetti);
+  else { cRunning = false; cctx.clearRect(0, 0, canvas.width, canvas.height); }
+}
+
+/* ============= Clock ============= */
+function tickClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('clock').innerHTML = `${h}:${m}<span class="sec">:${s}</span>`;
+  document.getElementById('clockDate').textContent = now.toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+/* ============= Boot ============= */
+// Spawn cards at a slow, steady pace : every 3-6 seconds
+function spawnLoop() {
+  spawnCard();
+  setTimeout(spawnLoop, rnd(3200, 6200));
+}
+setTimeout(spawnCard, 400);
+setTimeout(spawnCard, 1800);
+setTimeout(spawnCard, 3400);
+setTimeout(spawnLoop, 5200);
+</script>
+</body>
+</html>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion · Catch Up</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --text: #1a1a1f;
+    --text-muted: #6b6b75;
+    --text-faint: #a1a1aa;
+    --border: #ececef;
+    --border-strong: #e3e3e6;
+    --accent: #5b6cff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #fff;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .login-shell {
+    display: grid;
+    grid-template-columns: minmax(360px, 5fr) 7fr;
+    min-height: 100vh;
+  }
+
+  /* Left — form */
+  .login-left {
+    display: flex; flex-direction: column;
+    padding: 40px 56px;
+    background: #fff;
+    position: relative;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-bottom: auto;
+  }
+  .brand-logo { width: 36px; height: 36px; border-radius: 9px; overflow: hidden; display: inline-flex; }
+  .brand-logo svg { display: block; width: 100%; height: 100%; }
+  .brand-name { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+
+  .form-wrap {
+    width: 100%; max-width: 380px;
+    margin: 0 auto;
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .form-title { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; margin: 0 0 8px; }
+  .form-sub { font-size: 13.5px; color: var(--text-muted); margin: 0 0 32px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 11px 14px; font-size: 14px; font-family: inherit;
+    color: var(--text); background: #fff;
+    border: 1px solid var(--border-strong); border-radius: 10px;
+    outline: none; transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .field input:focus { border-color: var(--text); box-shadow: 0 0 0 3px rgba(26,26,31,0.08); }
+  .field input::placeholder { color: var(--text-faint); }
+
+  .row { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 22px; }
+  .remember { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); cursor: pointer; }
+  .remember input { width: 14px; height: 14px; accent-color: var(--text); }
+  .link { font-size: 12.5px; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border-strong); padding-bottom: 1px; }
+  .link:hover { border-bottom-color: var(--text); }
+
+  .btn-primary {
+    width: 100%; padding: 12px 18px;
+    background: var(--text); color: #fff;
+    border: none; border-radius: 10px;
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.12s, transform 0.08s;
+  }
+  .btn-primary:hover { background: #000; }
+  .btn-primary:active { transform: scale(0.99); }
+
+  .divider {
+    display: flex; align-items: center; gap: 10px; margin: 24px 0;
+    font-size: 11.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .btn-secondary {
+    width: 100%; padding: 11px 18px;
+    background: #fff; color: var(--text);
+    border: 1px solid var(--border-strong); border-radius: 10px;
+    font-family: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    transition: background 0.12s;
+  }
+  .btn-secondary:hover { background: #fafafb; }
+  .btn-secondary svg { width: 16px; height: 16px; }
+
+  .footer-links { margin-top: auto; padding-top: 24px; display: flex; gap: 18px; font-size: 11.5px; color: var(--text-muted); }
+  .footer-links a { color: inherit; text-decoration: none; }
+  .footer-links a:hover { color: var(--text); }
+
+  /* Right — preview / carousel */
+  .login-right {
+    background: var(--bg);
+    padding: 48px 0 0 48px;
+    display: flex; flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .preview-text { max-width: 480px; margin: 16px 0 18px; padding-right: 48px; }
+  .preview-text h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .preview-text p { font-size: 13.5px; color: var(--text-muted); margin: 0; }
+
+  /* Carrousel container avec arrows visibles */
+  .carousel {
+    position: relative;
+    flex: 1;
+    margin-top: 8px;
+    display: flex; flex-direction: column;
+  }
+  .carousel-frame {
+    flex: 1;
+    position: relative;
+    overflow: visible;
+  }
+  .carousel-track {
+    position: absolute; inset: 0;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+  .slide.prev { transform: translateX(-40px); }
+
+  /* Arrows */
+  .carousel-nav {
+    position: absolute;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    z-index: 10;
+  }
+  .nav-arrow {
+    width: 28px; height: 28px;
+    background: transparent; border: none;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    padding: 0;
+    transition: color 0.12s, transform 0.08s;
+  }
+  .nav-arrow:hover { color: var(--text); }
+  .nav-arrow:active { transform: scale(0.92); }
+  .nav-arrow svg { width: 16px; height: 16px; stroke-width: 2.2; }
+
+  .carousel-dots { display: flex; gap: 6px; align-items: center; }
+  .carousel-dots .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--border-strong); cursor: pointer;
+    transition: width 0.2s, background 0.2s;
+  }
+  .carousel-dots .dot.active { width: 24px; background: var(--text); border-radius: 999px; }
+
+  .carousel-counter {
+    font-size: 11.5px; font-weight: 600; color: var(--text-muted);
+    font-variant-numeric: tabular-nums; min-width: 32px;
+  }
+
+  /* Mockup commun */
+  .mockup {
+    background: #fff;
+    border-radius: 18px 0 0 0;
+    box-shadow: -8px -8px 40px rgba(16,17,21,0.08), -2px -2px 10px rgba(16,17,21,0.04);
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  .mockup::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 100px;
+    background: linear-gradient(to bottom, transparent 0%, rgba(247,247,248,0.95) 100%);
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  /* Sidebar */
+  .mock-sidebar {
+    background: var(--bg);
+    padding: 14px 10px;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    gap: 2px;
+  }
+  .mock-brand {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px 14px;
+  }
+  .mock-brand-logo { width: 22px; height: 22px; border-radius: 5px; overflow: hidden; display: inline-flex; }
+  .mock-brand-logo svg { width: 100%; height: 100%; }
+  .mock-brand-name { font-size: 11px; font-weight: 700; }
+  .mock-nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px;
+    font-size: 11px; color: var(--text-muted);
+  }
+  .mock-nav-item.active { background: #fff; box-shadow: 0 1px 2px rgba(16,17,21,0.04); color: var(--text); font-weight: 600; }
+  .mock-nav-icon { width: 11px; height: 11px; border-radius: 2px; background: #cfd1d8; flex-shrink: 0; }
+  .mock-nav-item.active .mock-nav-icon { background: var(--text); }
+  .mock-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+  .mock-user { display: flex; align-items: center; gap: 8px; padding: 8px; margin-top: auto; border-top: 1px solid var(--border); }
+  .mock-user-pic { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #c5e8d5, #9bd7af); display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #156b39; }
+  .mock-user-info { flex: 1; min-width: 0; }
+  .mock-user-name { font-size: 11px; font-weight: 600; }
+  .mock-user-status { font-size: 9.5px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .mock-user-status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #2bb673; }
+
+  /* Main */
+  .mock-main {
+    background: #fff;
+    padding: 18px 22px;
+    overflow: hidden;
+    position: relative;
+  }
+  .mock-h1 { font-size: 16px; font-weight: 700; margin-bottom: 3px; letter-spacing: -0.01em; }
+  .mock-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 18px; }
+
+  /* Slide 1: Dashboard */
+  .mock-kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .mock-kpi {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .mock-kpi .icon { width: 22px; height: 22px; border-radius: 5px; background: #f3f4f8; border: 1px solid var(--border); margin-bottom: 8px; display:inline-flex; align-items:center; justify-content:center; color: var(--text-muted); }
+  .mock-kpi .icon svg { width: 11px; height: 11px; }
+  .mock-kpi .k { font-size: 9.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .mock-kpi .v { font-size: 18px; font-weight: 700; margin-top: 3px; letter-spacing: -0.01em; }
+  .mock-kpi .pct { font-size: 10.5px; color: var(--text-faint); margin-top: 1px; }
+
+  .mock-chart {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    height: 170px;
+    position: relative;
+  }
+  .mock-chart-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .mock-chart-sub { font-size: 10px; color: var(--text-muted); margin-bottom: 10px; }
+  .mock-chart-line { position: absolute; left: 16px; right: 16px; top: 60px; height: 90px; }
+  .mock-chart-line svg { width: 100%; height: 100%; }
+  .mock-chart-label { position: absolute; left: 16px; bottom: 12px; font-size: 9px; color: var(--text-faint); display: flex; gap: 12px; }
+
+  /* Slide 2: Kanban */
+  .mock-board-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; }
+  .mock-filter-bar { display: flex; gap: 6px; }
+  .mock-filter-bar .chip { padding: 4px 10px; background: #fff; border: 1px solid var(--border); border-radius: 999px; font-size: 10px; color: var(--text-muted); }
+  .mock-filter-bar .chip.dark { background: #1a1a1f; color: #fff; }
+  .mock-kanban {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    min-height: 240px;
+  }
+  .mock-col {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .mock-col-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2px 4px 6px;
+    font-size: 10.5px; font-weight: 600;
+  }
+  .mock-col-head .col-title { display: flex; align-items: center; gap: 5px; }
+  .mock-col-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .mock-col-dot.c1 { background: #f5b942; }
+  .mock-col-dot.c2 { background: #b6c2f6; }
+  .mock-col-dot.c3 { background: #9bd7af; }
+  .mock-col-dot.c4 { background: #2bb673; }
+  .mock-col-count {
+    background: #fff; border: 1px solid var(--border); padding: 0 6px;
+    border-radius: 999px; font-size: 9.5px; font-weight: 700; color: var(--text-muted);
+  }
+  .mock-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 8px;
+    font-size: 10.5px;
+    line-height: 1.3;
+  }
+  .mock-card .comp { font-weight: 600; }
+  .mock-card .amt { float: right; font-weight: 600; }
+  .mock-card .contact { color: var(--text-muted); font-size: 9.5px; margin-top: 2px; }
+  .mock-card .tag { display: inline-block; margin-top: 4px; padding: 1px 5px; background: #f3f4f8; border-radius: 4px; font-size: 9px; color: var(--text-muted); }
+
+  /* Slide 3: Contacts */
+  .mock-table-head {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .mock-table {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .mock-thead {
+    background: #fafafb;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1.5fr 0.9fr 0.7fr 0.7fr 0.9fr;
+    gap: 10px;
+    font-size: 9px; font-weight: 700; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .mock-trow {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1.5fr 0.9fr 0.7fr 0.7fr 0.9fr;
+    gap: 10px;
+    align-items: center;
+    font-size: 10.5px;
+  }
+  .mock-trow:last-child { border-bottom: none; }
+  .mock-trow .ent-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid var(--border);
+    padding: 2px 9px 2px 2px;
+    border-radius: 999px;
+    width: fit-content;
+  }
+  .mock-trow .ent-pill .av { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; font-size: 8px; font-weight: 700; color: #1a1a1f; display: inline-flex; align-items: center; justify-content: center; }
+  .av.a1 { background: #f4c1c8; }
+  .av.a2 { background: #c8e6c9; }
+  .av.a3 { background: #fff0c2; }
+  .av.a4 { background: #d8eff3; }
+  .av.a5 { background: #e0e4ff; }
+  .av.a6 { background: #f4e0ff; }
+  .mock-score { display: inline-flex; align-items: center; gap: 6px; }
+  .mock-score .b { padding: 2px 6px; border-radius: 5px; font-size: 9.5px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; min-width: 22px; text-align: center; }
+  .mock-score .b.g { background: #2bb673; }
+  .mock-score .b.y { background: #f5b942; color: #5a3e00; }
+  .mock-score .b.x { background: #b0b3bb; }
+  .mock-eval { color: var(--text-muted); font-style: italic; font-size: 10px; }
+  .mock-cell-muted { color: var(--text-muted); font-size: 10px; }
+
+  /* Subtle blur */
+  .blur-sm { filter: blur(0.8px); opacity: 0.9; }
+  .blur-md { filter: blur(1.6px); opacity: 0.75; }
+
+  @media (max-width: 980px) {
+    .login-shell { grid-template-columns: 1fr; }
+    .login-right { display: none; }
+    .login-left { padding: 32px 28px; }
+  }
+
+  .alert { padding: 10px 12px; border-radius: 8px; font-size: 12.5px; margin-bottom: 14px; display: none; }
+  .alert.show { display: block; }
+  .alert.error { background: #fde2e2; color: #8a1f1f; }
+</style>
+</head>
+<body>
+<div class="login-shell">
+
+  <!-- LEFT : Form -->
+  <div class="login-left">
+    <div class="brand">
+      <span class="brand-logo">
+        <svg viewBox="0 0 107.34 115.85" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="cu_brand_g1" x1="-74.4" y1="-149.95" x2="63.39" y2="12.58" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#435d9c"/><stop offset=".24" stop-color="#4577a1"/><stop offset=".66" stop-color="#4aa2a9"/><stop offset=".88" stop-color="#4cb3ad"/></linearGradient>
+            <linearGradient id="cu_brand_g2" x1="23.36" y1="75.43" x2="122.15" y2="130.65" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00aae9"/><stop offset=".4" stop-color="#176bba"/><stop offset=".72" stop-color="#284099"/><stop offset=".88" stop-color="#2f308d"/></linearGradient>
+            <linearGradient id="cu_brand_g3" x1="28.45" y1="8.49" x2="61.31" y2="19.3" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a8ba1"/><stop offset=".05" stop-color="#1e8da1"/><stop offset=".6" stop-color="#49aaa9"/><stop offset=".88" stop-color="#5ab6ad"/></linearGradient>
+            <linearGradient id="cu_brand_g4" x1="20.54" y1="77.29" x2="21.91" y2="12.01" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3974b7"/><stop offset=".94" stop-color="#4dafc5"/></linearGradient>
+          </defs>
+          <path d="M97.55,51.06c-5.4,0-9.79,4.39-9.79,9.79s4.39,9.79,9.79,9.79,9.79-4.39,9.79-9.79-4.39-9.79-9.79-9.79Z" fill="url(#cu_brand_g1)"/>
+          <path d="M30.67,28.1c3.69-3.61,8.12-6.49,13.12-8.39.66-.26,1.29-.48,1.9-.66.45-.16.93-.3,1.41-.42.42-.13.79-.22,1.15-.29.25-.07.5-.13.75-.18.31-.08.63-.14.94-.2.26-.06.55-.12.87-.16.45-.08.9-.16,1.36-.21.54-.08,1.06-.15,1.58-.19.55-.06,1.15-.1,1.76-.13h.1c.62-.04,1.27-.06,2.03-.06,9.61,0,18.31,3.34,25.17,9.66,2.62,2.42,6.65,2.63,9.57.51l8.5-6.18C90.36,7.7,74.43,0,56.81,0,25.49,0,0,25.95,0,57.84c0,.56,0,1.12.03,1.66,0,.64.04,1.25.08,1.88.02.38.06.77.09,1.16,3.75-13.87,15.93-26.42,30.48-34.43h-.01Z" fill="url(#cu_brand_g2)"/>
+          <path d="M48.19,115.16c.82.13,1.51.22,2.15.29.64.08,1.23.13,1.82.18l.24.02c.7.05,1.41.09,2.11.12.79.04,1.55.05,2.3.05,17.62,0,33.55-7.69,44.09-21.2l-8.51-6.18c-2.92-2.12-6.94-1.91-9.56.51-6.88,6.33-15.64,9.68-25.34,9.68-.66,0-1.26-.02-1.83-.05-.18,0-.35,0-.48-.02-.55-.02-1.09-.07-1.64-.12-.12,0-.25-.02-.37-.04-.59-.06-1.21-.14-1.89-.25-.53-.07-1.07-.17-1.6-.29-.75-.14-1.58-.34-2.4-.56-.61-.17-1.2-.34-1.79-.53-.56-.18-1.12-.37-1.66-.58l-.43-.17c-.51-.2-1.05-.42-1.58-.66-.58-.25-1.22-.56-1.9-.92-.38-.19-.79-.41-1.2-.65-.29-.16-.57-.32-.85-.49-.72-.41-1.51-.92-2.3-1.49-.23-.15-.52-.36-.82-.59-1.18-.86-2.37-1.85-3.46-2.9-.22-.21-.45-.43-.67-.66-.29-.29-.59-.59-.87-.9-.23-.23-.46-.48-.7-.76-.87-.96-1.72-2.01-2.52-3.13.83,3.66,2.06,8.02,3.91,12.53,2.67,6.51,6.64,13.3,12.59,18.72,1.56.39,3.15.73,4.76.99l.39.07v-.02Z" fill="url(#cu_brand_g3)"/>
+          <path d="M30.45,95.39c-1.86-4.51-3.08-8.87-3.91-12.53-.05-.07-.11-.14-.16-.21-.28-.35-.53-.72-.78-1.12-.52-.77-1.02-1.57-1.43-2.32-.17-.27-.35-.61-.53-.94-.15-.28-.31-.58-.46-.88l-.44-.9c-2.73-5.69-4.17-12.12-4.17-18.65,0-11.68,4.5-22.28,12.11-29.73-1.04.57-2.08,1.17-3.1,1.79-1.07.66-2.12,1.34-3.15,2.05-2.87,1.91-5.58,4.02-8.1,6.28-1.14,1.03-2.26,2.08-3.31,3.17-3.97,4.05-7.3,8.5-9.71,13.2-.32.62-.63,1.25-.92,1.89-.58,1.27-1.09,2.55-1.52,3.84-.25.74-.47,1.47-.67,2.21.16,1.95.42,3.93.79,5.99l.46,2.29c4.82,21.56,20.89,38.09,41.6,43.29-5.95-5.42-9.92-12.21-12.59-18.72h0Z" fill="url(#cu_brand_g4)"/>
+        </svg>
+      </span>
+      <span class="brand-name">Catch Up</span>
+    </div>
+
+    <div class="form-wrap">
+      <h1 class="form-title">Bon retour</h1>
+      <p class="form-sub">Connectez-vous à votre espace pour reprendre votre pipeline commercial.</p>
+
+      <div class="alert error" id="loginAlert"></div>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="field">
+          <label for="email">Adresse e-mail</label>
+          <input type="email" id="email" placeholder="vous@entreprise.com" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <div class="row">
+          <label class="remember"><input type="checkbox" id="remember"> Rester connecté</label>
+          <a href="#" class="link">Mot de passe oublié ?</a>
+        </div>
+        <button class="btn-primary" type="submit">
+          Se connecter
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+
+        <div class="divider">ou</div>
+
+        <button class="btn-secondary" type="button">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M21.35 11.1H12v2.97h5.4c-.24 1.4-.96 2.58-2.04 3.36v2.79h3.3c1.94-1.79 3.06-4.43 3.06-7.55 0-.7-.07-1.36-.18-2z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.43l-3.3-2.79c-.9.6-2.06.96-3.32.96-2.55 0-4.71-1.72-5.48-4.04H3.18v2.55C4.83 19.61 8.13 22 12 22z"/><path fill="#FBBC04" d="M6.52 13.7c-.2-.6-.32-1.24-.32-1.7s.12-1.1.32-1.7V7.75H3.18C2.43 9.07 2 10.5 2 12s.43 2.93 1.18 4.25l3.34-2.55z"/><path fill="#EA4335" d="M12 5.96c1.46 0 2.78.5 3.82 1.49l2.86-2.86C16.97 3.07 14.7 2 12 2 8.13 2 4.83 4.39 3.18 7.75l3.34 2.55C7.29 7.68 9.45 5.96 12 5.96z"/></svg>
+          Continuer avec Google
+        </button>
+      </form>
+    </div>
+
+    <div class="footer-links">
+      <a href="#">Confidentialité</a>
+      <a href="#">Conditions</a>
+      <a href="#">Support</a>
+      <span style="margin-left:auto; color:var(--text-faint);">© 2026 Catch Up</span>
+    </div>
+  </div>
+
+  <!-- RIGHT : Carrousel mockup -->
+  <div class="login-right">
+    <div class="preview-text">
+      <h2>Pilotez votre pipeline commercial en un coup d'œil.</h2>
+      <p>Opportunités, tâches, campagnes, contacts. Tout au même endroit, sans bruit visuel.</p>
+    </div>
+
+    <div class="carousel">
+      <div class="carousel-frame">
+        <div class="carousel-track" id="carouselTrack">
+
+          <!-- Slide 1 : Reporting -->
+          <div class="slide active" data-slide="0">
+            <div class="mockup">
+              <aside class="mock-sidebar">
+                <div class="mock-brand">
+                  <span class="mock-brand-logo">
+                    <svg viewBox="0 0 107.34 115.85" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="ms1_g1" x1="-74.4" y1="-149.95" x2="63.39" y2="12.58" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#435d9c"/><stop offset=".24" stop-color="#4577a1"/><stop offset=".66" stop-color="#4aa2a9"/><stop offset=".88" stop-color="#4cb3ad"/></linearGradient><linearGradient id="ms1_g2" x1="23.36" y1="75.43" x2="122.15" y2="130.65" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00aae9"/><stop offset=".4" stop-color="#176bba"/><stop offset=".72" stop-color="#284099"/><stop offset=".88" stop-color="#2f308d"/></linearGradient><linearGradient id="ms1_g3" x1="28.45" y1="8.49" x2="61.31" y2="19.3" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a8ba1"/><stop offset=".05" stop-color="#1e8da1"/><stop offset=".6" stop-color="#49aaa9"/><stop offset=".88" stop-color="#5ab6ad"/></linearGradient><linearGradient id="ms1_g4" x1="20.54" y1="77.29" x2="21.91" y2="12.01" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3974b7"/><stop offset=".94" stop-color="#4dafc5"/></linearGradient></defs><path d="M97.55,51.06c-5.4,0-9.79,4.39-9.79,9.79s4.39,9.79,9.79,9.79,9.79-4.39,9.79-9.79-4.39-9.79-9.79-9.79Z" fill="url(#ms1_g1)"/><path d="M30.67,28.1c3.69-3.61,8.12-6.49,13.12-8.39.66-.26,1.29-.48,1.9-.66.45-.16.93-.3,1.41-.42.42-.13.79-.22,1.15-.29.25-.07.5-.13.75-.18.31-.08.63-.14.94-.2.26-.06.55-.12.87-.16.45-.08.9-.16,1.36-.21.54-.08,1.06-.15,1.58-.19.55-.06,1.15-.1,1.76-.13h.1c.62-.04,1.27-.06,2.03-.06,9.61,0,18.31,3.34,25.17,9.66,2.62,2.42,6.65,2.63,9.57.51l8.5-6.18C90.36,7.7,74.43,0,56.81,0,25.49,0,0,25.95,0,57.84c0,.56,0,1.12.03,1.66,0,.64.04,1.25.08,1.88.02.38.06.77.09,1.16,3.75-13.87,15.93-26.42,30.48-34.43h-.01Z" fill="url(#ms1_g2)"/><path d="M48.19,115.16c.82.13,1.51.22,2.15.29.64.08,1.23.13,1.82.18l.24.02c.7.05,1.41.09,2.11.12.79.04,1.55.05,2.3.05,17.62,0,33.55-7.69,44.09-21.2l-8.51-6.18c-2.92-2.12-6.94-1.91-9.56.51-6.88,6.33-15.64,9.68-25.34,9.68-.66,0-1.26-.02-1.83-.05-.18,0-.35,0-.48-.02-.55-.02-1.09-.07-1.64-.12-.12,0-.25-.02-.37-.04-.59-.06-1.21-.14-1.89-.25-.53-.07-1.07-.17-1.6-.29-.75-.14-1.58-.34-2.4-.56-.61-.17-1.2-.34-1.79-.53-.56-.18-1.12-.37-1.66-.58l-.43-.17c-.51-.2-1.05-.42-1.58-.66-.58-.25-1.22-.56-1.9-.92-.38-.19-.79-.41-1.2-.65-.29-.16-.57-.32-.85-.49-.72-.41-1.51-.92-2.3-1.49-.23-.15-.52-.36-.82-.59-1.18-.86-2.37-1.85-3.46-2.9-.22-.21-.45-.43-.67-.66-.29-.29-.59-.59-.87-.9-.23-.23-.46-.48-.7-.76-.87-.96-1.72-2.01-2.52-3.13.83,3.66,2.06,8.02,3.91,12.53,2.67,6.51,6.64,13.3,12.59,18.72,1.56.39,3.15.73,4.76.99l.39.07v-.02Z" fill="url(#ms1_g3)"/><path d="M30.45,95.39c-1.86-4.51-3.08-8.87-3.91-12.53-.05-.07-.11-.14-.16-.21-.28-.35-.53-.72-.78-1.12-.52-.77-1.02-1.57-1.43-2.32-.17-.27-.35-.61-.53-.94-.15-.28-.31-.58-.46-.88l-.44-.9c-2.73-5.69-4.17-12.12-4.17-18.65,0-11.68,4.5-22.28,12.11-29.73-1.04.57-2.08,1.17-3.1,1.79-1.07.66-2.12,1.34-3.15,2.05-2.87,1.91-5.58,4.02-8.1,6.28-1.14,1.03-2.26,2.08-3.31,3.17-3.97,4.05-7.3,8.5-9.71,13.2-.32.62-.63,1.25-.92,1.89-.58,1.27-1.09,2.55-1.52,3.84-.25.74-.47,1.47-.67,2.21.16,1.95.42,3.93.79,5.99l.46,2.29c4.82,21.56,20.89,38.09,41.6,43.29-5.95-5.42-9.92-12.21-12.59-18.72h0Z" fill="url(#ms1_g4)"/></svg>
+                  </span>
+                  <span class="mock-brand-name">Catch Up</span>
+                </div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Mon tableau de bord</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Contacts</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Entreprises</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Pipeline</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Tâches</span></div>
+                <div class="mock-nav-item blur-sm"><span class="mock-nav-icon"></span><span>Campagnes</span></div>
+                <div class="mock-nav-item active"><span class="mock-nav-icon"></span><span>Reporting</span></div>
+                <div class="mock-sep"></div>
+                <div class="mock-nav-item blur-sm"><span class="mock-nav-icon"></span><span>Réglages</span></div>
+                <div class="mock-user">
+                  <span class="mock-user-pic">SM</span>
+                  <div class="mock-user-info">
+                    <div class="mock-user-name">Sophie Martin</div>
+                    <div class="mock-user-status">Actif</div>
+                  </div>
+                </div>
+              </aside>
+              <div class="mock-main">
+                <div class="mock-h1">Reporting</div>
+                <div class="mock-sub">Suivi du pipeline commercial — 12 mois</div>
+                <div class="mock-kpi-row">
+                  <div class="mock-kpi">
+                    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+                    <div class="k">Pipeline total</div>
+                    <div class="v">84 944 €</div>
+                    <div class="pct">+12% vs M-1</div>
+                  </div>
+                  <div class="mock-kpi">
+                    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+                    <div class="k">Gagné</div>
+                    <div class="v">5 460 €</div>
+                    <div class="pct">2 deals</div>
+                  </div>
+                  <div class="mock-kpi">
+                    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                    <div class="k">Conversion</div>
+                    <div class="v">50.0 %</div>
+                    <div class="pct">Gagné / Clôturé</div>
+                  </div>
+                </div>
+                <div class="mock-chart">
+                  <div class="mock-chart-title">Pipeline mensuel</div>
+                  <div class="mock-chart-sub">Montant des opportunités par date de suivi</div>
+                  <div class="mock-chart-line">
+                    <svg viewBox="0 0 320 100" preserveAspectRatio="none">
+                      <path d="M0,72 L30,60 L60,68 L90,52 L120,40 L150,46 L180,28 L210,36 L240,22 L270,30 L300,12 L320,18" fill="none" stroke="#1a1a1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M0,72 L30,60 L60,68 L90,52 L120,40 L150,46 L180,28 L210,36 L240,22 L270,30 L300,12 L320,18 L320,100 L0,100 Z" fill="rgba(26,26,31,0.05)"/>
+                    </svg>
+                  </div>
+                  <div class="mock-chart-label">
+                    <span>Jan</span><span>Mar</span><span>Mai</span><span>Juil</span><span>Sep</span><span>Nov</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 2 : Pipeline Kanban -->
+          <div class="slide" data-slide="1">
+            <div class="mockup">
+              <aside class="mock-sidebar">
+                <div class="mock-brand">
+                  <span class="mock-brand-logo">
+                    <svg viewBox="0 0 107.34 115.85" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="ms2_g1" x1="-74.4" y1="-149.95" x2="63.39" y2="12.58" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#435d9c"/><stop offset=".24" stop-color="#4577a1"/><stop offset=".66" stop-color="#4aa2a9"/><stop offset=".88" stop-color="#4cb3ad"/></linearGradient><linearGradient id="ms2_g2" x1="23.36" y1="75.43" x2="122.15" y2="130.65" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00aae9"/><stop offset=".4" stop-color="#176bba"/><stop offset=".72" stop-color="#284099"/><stop offset=".88" stop-color="#2f308d"/></linearGradient><linearGradient id="ms2_g3" x1="28.45" y1="8.49" x2="61.31" y2="19.3" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a8ba1"/><stop offset=".05" stop-color="#1e8da1"/><stop offset=".6" stop-color="#49aaa9"/><stop offset=".88" stop-color="#5ab6ad"/></linearGradient><linearGradient id="ms2_g4" x1="20.54" y1="77.29" x2="21.91" y2="12.01" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3974b7"/><stop offset=".94" stop-color="#4dafc5"/></linearGradient></defs><path d="M97.55,51.06c-5.4,0-9.79,4.39-9.79,9.79s4.39,9.79,9.79,9.79,9.79-4.39,9.79-9.79-4.39-9.79-9.79-9.79Z" fill="url(#ms2_g1)"/><path d="M30.67,28.1c3.69-3.61,8.12-6.49,13.12-8.39.66-.26,1.29-.48,1.9-.66.45-.16.93-.3,1.41-.42.42-.13.79-.22,1.15-.29.25-.07.5-.13.75-.18.31-.08.63-.14.94-.2.26-.06.55-.12.87-.16.45-.08.9-.16,1.36-.21.54-.08,1.06-.15,1.58-.19.55-.06,1.15-.1,1.76-.13h.1c.62-.04,1.27-.06,2.03-.06,9.61,0,18.31,3.34,25.17,9.66,2.62,2.42,6.65,2.63,9.57.51l8.5-6.18C90.36,7.7,74.43,0,56.81,0,25.49,0,0,25.95,0,57.84c0,.56,0,1.12.03,1.66,0,.64.04,1.25.08,1.88.02.38.06.77.09,1.16,3.75-13.87,15.93-26.42,30.48-34.43h-.01Z" fill="url(#ms2_g2)"/><path d="M48.19,115.16c.82.13,1.51.22,2.15.29.64.08,1.23.13,1.82.18l.24.02c.7.05,1.41.09,2.11.12.79.04,1.55.05,2.3.05,17.62,0,33.55-7.69,44.09-21.2l-8.51-6.18c-2.92-2.12-6.94-1.91-9.56.51-6.88,6.33-15.64,9.68-25.34,9.68-.66,0-1.26-.02-1.83-.05-.18,0-.35,0-.48-.02-.55-.02-1.09-.07-1.64-.12-.12,0-.25-.02-.37-.04-.59-.06-1.21-.14-1.89-.25-.53-.07-1.07-.17-1.6-.29-.75-.14-1.58-.34-2.4-.56-.61-.17-1.2-.34-1.79-.53-.56-.18-1.12-.37-1.66-.58l-.43-.17c-.51-.2-1.05-.42-1.58-.66-.58-.25-1.22-.56-1.9-.92-.38-.19-.79-.41-1.2-.65-.29-.16-.57-.32-.85-.49-.72-.41-1.51-.92-2.3-1.49-.23-.15-.52-.36-.82-.59-1.18-.86-2.37-1.85-3.46-2.9-.22-.21-.45-.43-.67-.66-.29-.29-.59-.59-.87-.9-.23-.23-.46-.48-.7-.76-.87-.96-1.72-2.01-2.52-3.13.83,3.66,2.06,8.02,3.91,12.53,2.67,6.51,6.64,13.3,12.59,18.72,1.56.39,3.15.73,4.76.99l.39.07v-.02Z" fill="url(#ms2_g3)"/><path d="M30.45,95.39c-1.86-4.51-3.08-8.87-3.91-12.53-.05-.07-.11-.14-.16-.21-.28-.35-.53-.72-.78-1.12-.52-.77-1.02-1.57-1.43-2.32-.17-.27-.35-.61-.53-.94-.15-.28-.31-.58-.46-.88l-.44-.9c-2.73-5.69-4.17-12.12-4.17-18.65,0-11.68,4.5-22.28,12.11-29.73-1.04.57-2.08,1.17-3.1,1.79-1.07.66-2.12,1.34-3.15,2.05-2.87,1.91-5.58,4.02-8.1,6.28-1.14,1.03-2.26,2.08-3.31,3.17-3.97,4.05-7.3,8.5-9.71,13.2-.32.62-.63,1.25-.92,1.89-.58,1.27-1.09,2.55-1.52,3.84-.25.74-.47,1.47-.67,2.21.16,1.95.42,3.93.79,5.99l.46,2.29c4.82,21.56,20.89,38.09,41.6,43.29-5.95-5.42-9.92-12.21-12.59-18.72h0Z" fill="url(#ms2_g4)"/></svg>
+                  </span>
+                  <span class="mock-brand-name">Catch Up</span>
+                </div>
+                <div class="mock-nav-item blur-sm"><span class="mock-nav-icon"></span><span>Mon tableau de bord</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Contacts</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Entreprises</span></div>
+                <div class="mock-nav-item active"><span class="mock-nav-icon"></span><span>Pipeline</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Tâches</span></div>
+                <div class="mock-nav-item blur-sm"><span class="mock-nav-icon"></span><span>Campagnes</span></div>
+                <div class="mock-nav-item blur-sm"><span class="mock-nav-icon"></span><span>Reporting</span></div>
+                <div class="mock-sep"></div>
+                <div class="mock-nav-item blur-md"><span class="mock-nav-icon"></span><span>Réglages</span></div>
+                <div class="mock-user">
+                  <span class="mock-user-pic">SM</span>
+                  <div class="mock-user-info">
+                    <div class="mock-user-name">Sophie Martin</div>
+                    <div class="mock-user-status">Actif</div>
+                  </div>
+                </div>
+              </aside>
+              <div class="mock-main">
+                <div class="mock-board-head">
+                  <div>
+                    <div class="mock-h1">Pipeline (Kanban)</div>
+                    <div class="mock-sub">20 opportunités actives — 84 944 € de pipeline</div>
+                  </div>
+                  <div class="mock-filter-bar">
+                    <span class="chip dark">12 mois</span>
+                  </div>
+                </div>
+                <div class="mock-kanban">
+                  <div class="mock-col">
+                    <div class="mock-col-head">
+                      <div class="col-title"><span class="mock-col-dot c1"></span><span>Nouveau</span></div>
+                      <span class="mock-col-count">4</span>
+                    </div>
+                    <div class="mock-card"><div><span class="comp">ELECTRIS</span><span class="amt">—</span></div><div class="contact">Bouskila Natanael</div></div>
+                    <div class="mock-card"><div><span class="comp">REFRITECH OI</span><span class="amt">—</span></div><div class="contact">Arnaud Cheri</div></div>
+                    <div class="mock-card blur-sm"><div><span class="comp">Acciona Energia</span></div><div class="contact">Hugo Pradier</div></div>
+                  </div>
+                  <div class="mock-col">
+                    <div class="mock-col-head">
+                      <div class="col-title"><span class="mock-col-dot c2"></span><span>Devis envoyé</span></div>
+                      <span class="mock-col-count">5</span>
+                    </div>
+                    <div class="mock-card"><div><span class="comp">Instalatec</span><span class="amt">50 000 €</span></div><div class="contact">Eric Painchault</div><span class="tag">Catch-up campaign</span></div>
+                    <div class="mock-card"><div><span class="comp">PABLO LOPEZ</span><span class="amt">9 990 €</span></div><div class="contact">Pablo Lopez</div></div>
+                    <div class="mock-card blur-sm"><div><span class="comp">MAXEI</span><span class="amt">—</span></div><div class="contact">Richard Debiak</div></div>
+                  </div>
+                  <div class="mock-col">
+                    <div class="mock-col-head">
+                      <div class="col-title"><span class="mock-col-dot c3"></span><span>À relancer</span></div>
+                      <span class="mock-col-count">8</span>
+                    </div>
+                    <div class="mock-card"><div><span class="comp">QUARK REF.</span><span class="amt">15 466 €</span></div><div class="contact">Didier Thomas</div></div>
+                    <div class="mock-card"><div><span class="comp">EMITECH SAS</span><span class="amt">4 028 €</span></div><div class="contact">Yannick Lelarge</div></div>
+                    <div class="mock-card blur-sm"><div><span class="comp">CALVET</span><span class="amt">—</span></div><div class="contact">Christophe Rey</div></div>
+                    <div class="mock-card blur-md"><div><span class="comp">MEDICOS</span><span class="amt">—</span></div></div>
+                  </div>
+                  <div class="mock-col">
+                    <div class="mock-col-head">
+                      <div class="col-title"><span class="mock-col-dot c4"></span><span>Gagné</span></div>
+                      <span class="mock-col-count">2</span>
+                    </div>
+                    <div class="mock-card"><div><span class="comp">Komax France</span><span class="amt">4 500 €</span></div><div class="contact">Marion Forges</div></div>
+                    <div class="mock-card"><div><span class="comp">Sodeplast</span><span class="amt">960 €</span></div><div class="contact">Amaury Teillol</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 3 : Contacts -->
+          <div class="slide" data-slide="2">
+            <div class="mockup">
+              <aside class="mock-sidebar">
+                <div class="mock-brand">
+                  <span class="mock-brand-logo">
+                    <svg viewBox="0 0 107.34 115.85" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="ms3_g1" x1="-74.4" y1="-149.95" x2="63.39" y2="12.58" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#435d9c"/><stop offset=".24" stop-color="#4577a1"/><stop offset=".66" stop-color="#4aa2a9"/><stop offset=".88" stop-color="#4cb3ad"/></linearGradient><linearGradient id="ms3_g2" x1="23.36" y1="75.43" x2="122.15" y2="130.65" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00aae9"/><stop offset=".4" stop-color="#176bba"/><stop offset=".72" stop-color="#284099"/><stop offset=".88" stop-color="#2f308d"/></linearGradient><linearGradient id="ms3_g3" x1="28.45" y1="8.49" x2="61.31" y2="19.3" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a8ba1"/><stop offset=".05" stop-color="#1e8da1"/><stop offset=".6" stop-color="#49aaa9"/><stop offset=".88" stop-color="#5ab6ad"/></linearGradient><linearGradient id="ms3_g4" x1="20.54" y1="77.29" x2="21.91" y2="12.01" gradientTransform="translate(0 113.73) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3974b7"/><stop offset=".94" stop-color="#4dafc5"/></linearGradient></defs><path d="M97.55,51.06c-5.4,0-9.79,4.39-9.79,9.79s4.39,9.79,9.79,9.79,9.79-4.39,9.79-9.79-4.39-9.79-9.79-9.79Z" fill="url(#ms3_g1)"/><path d="M30.67,28.1c3.69-3.61,8.12-6.49,13.12-8.39.66-.26,1.29-.48,1.9-.66.45-.16.93-.3,1.41-.42.42-.13.79-.22,1.15-.29.25-.07.5-.13.75-.18.31-.08.63-.14.94-.2.26-.06.55-.12.87-.16.45-.08.9-.16,1.36-.21.54-.08,1.06-.15,1.58-.19.55-.06,1.15-.1,1.76-.13h.1c.62-.04,1.27-.06,2.03-.06,9.61,0,18.31,3.34,25.17,9.66,2.62,2.42,6.65,2.63,9.57.51l8.5-6.18C90.36,7.7,74.43,0,56.81,0,25.49,0,0,25.95,0,57.84c0,.56,0,1.12.03,1.66,0,.64.04,1.25.08,1.88.02.38.06.77.09,1.16,3.75-13.87,15.93-26.42,30.48-34.43h-.01Z" fill="url(#ms3_g2)"/><path d="M48.19,115.16c.82.13,1.51.22,2.15.29.64.08,1.23.13,1.82.18l.24.02c.7.05,1.41.09,2.11.12.79.04,1.55.05,2.3.05,17.62,0,33.55-7.69,44.09-21.2l-8.51-6.18c-2.92-2.12-6.94-1.91-9.56.51-6.88,6.33-15.64,9.68-25.34,9.68-.66,0-1.26-.02-1.83-.05-.18,0-.35,0-.48-.02-.55-.02-1.09-.07-1.64-.12-.12,0-.25-.02-.37-.04-.59-.06-1.21-.14-1.89-.25-.53-.07-1.07-.17-1.6-.29-.75-.14-1.58-.34-2.4-.56-.61-.17-1.2-.34-1.79-.53-.56-.18-1.12-.37-1.66-.58l-.43-.17c-.51-.2-1.05-.42-1.58-.66-.58-.25-1.22-.56-1.9-.92-.38-.19-.79-.41-1.2-.65-.29-.16-.57-.32-.85-.49-.72-.41-1.51-.92-2.3-1.49-.23-.15-.52-.36-.82-.59-1.18-.86-2.37-1.85-3.46-2.9-.22-.21-.45-.43-.67-.66-.29-.29-.59-.59-.87-.9-.23-.23-.46-.48-.7-.76-.87-.96-1.72-2.01-2.52-3.13.83,3.66,2.06,8.02,3.91,12.53,2.67,6.51,6.64,13.3,12.59,18.72,1.56.39,3.15.73,4.76.99l.39.07v-.02Z" fill="url(#ms3_g3)"/><path d="M30.45,95.39c-1.86-4.51-3.08-8.87-3.91-12.53-.05-.07-.11-.14-.16-.21-.28-.35-.53-.72-.78-1.12-.52-.77-1.02-1.57-1.43-2.32-.17-.27-.35-.61-.53-.94-.15-.28-.31-.58-.46-.88l-.44-.9c-2.73-5.69-4.17-12.12-4.17-18.65,0-11.68,4.5-22.28,12.11-29.73-1.04.57-2.08,1.17-3.1,1.79-1.07.66-2.12,1.34-3.15,2.05-2.87,1.91-5.58,4.02-8.1,6.28-1.14,1.03-2.26,2.08-3.31,3.17-3.97,4.05-7.3,8.5-9.71,13.2-.32.62-.63,1.25-.92,1.89-.58,1.27-1.09,2.55-1.52,3.84-.25.74-.47,1.47-.67,2.21.16,1.95.42,3.93.79,5.99l.46,2.29c4.82,21.56,20.89,38.09,41.6,43.29-5.95-5.42-9.92-12.21-12.59-18.72h0Z" fill="url(#ms3_g4)"/></svg>
+                  </span>
+                  <span class="mock-brand-name">Catch Up</span>
+                </div>
+                <div class="mock-nav-item blur-sm"><span class="mock-nav-icon"></span><span>Mon tableau de bord</span></div>
+                <div class="mock-nav-item active"><span class="mock-nav-icon"></span><span>Contacts</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Entreprises</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Pipeline</span></div>
+                <div class="mock-nav-item"><span class="mock-nav-icon"></span><span>Tâches</span></div>
+                <div class="mock-nav-item blur-sm"><span class="mock-nav-icon"></span><span>Campagnes</span></div>
+                <div class="mock-nav-item blur-md"><span class="mock-nav-icon"></span><span>Reporting</span></div>
+                <div class="mock-sep"></div>
+                <div class="mock-nav-item blur-md"><span class="mock-nav-icon"></span><span>Réglages</span></div>
+                <div class="mock-user">
+                  <span class="mock-user-pic">SM</span>
+                  <div class="mock-user-info">
+                    <div class="mock-user-name">Sophie Martin</div>
+                    <div class="mock-user-status">Actif</div>
+                  </div>
+                </div>
+              </aside>
+              <div class="mock-main">
+                <div class="mock-table-head">
+                  <div>
+                    <div class="mock-h1">Contacts</div>
+                    <div class="mock-sub">23 contacts · Tous segments</div>
+                  </div>
+                  <div class="mock-filter-bar">
+                    <span class="chip">Filtres</span>
+                  </div>
+                </div>
+                <div class="mock-table">
+                  <div class="mock-thead">
+                    <div>Nom</div>
+                    <div>Score</div>
+                    <div>Type</div>
+                    <div>Tags</div>
+                    <div>Dernière activité</div>
+                  </div>
+                  <div class="mock-trow">
+                    <span class="ent-pill"><span class="av a1">EP</span>Eric Painchault</span>
+                    <span class="mock-score"><span class="b g">85</span><span>Excellent</span></span>
+                    <span>Lead</span>
+                    <span><span class="ent-pill" style="padding:1px 8px 1px 1px; font-size:9.5px;"><span class="av a4" style="width:14px; height:14px; font-size:7px;">CM</span>Campagne</span></span>
+                    <span class="mock-cell-muted">Il y a 4 h</span>
+                  </div>
+                  <div class="mock-trow">
+                    <span class="ent-pill"><span class="av a2">MF</span>Marion Forges</span>
+                    <span class="mock-score"><span class="b g">82</span><span>Excellent</span></span>
+                    <span>Client</span>
+                    <span></span>
+                    <span class="mock-cell-muted">Hier</span>
+                  </div>
+                  <div class="mock-trow">
+                    <span class="ent-pill"><span class="av a3">DT</span>Didier Thomas</span>
+                    <span class="mock-score"><span class="b y">68</span><span>Bon</span></span>
+                    <span>Lead</span>
+                    <span></span>
+                    <span class="mock-cell-muted">2 jours</span>
+                  </div>
+                  <div class="mock-trow">
+                    <span class="ent-pill"><span class="av a4">YL</span>Yannick Lelarge</span>
+                    <span class="mock-score"><span class="b y">52</span><span>Bon</span></span>
+                    <span>Lead</span>
+                    <span></span>
+                    <span class="mock-cell-muted">3 jours</span>
+                  </div>
+                  <div class="mock-trow blur-sm">
+                    <span class="ent-pill"><span class="av a5">PL</span>Pablo Lopez</span>
+                    <span class="mock-score"><span class="b y">45</span><span>Moyen</span></span>
+                    <span>Lead</span>
+                    <span></span>
+                    <span class="mock-cell-muted">1 sem.</span>
+                  </div>
+                  <div class="mock-trow blur-sm">
+                    <span class="ent-pill"><span class="av a6">AT</span>Amaury Teillol</span>
+                    <span class="mock-eval">Evaluating</span>
+                    <span>Client</span>
+                    <span></span>
+                    <span class="mock-cell-muted">2 sem.</span>
+                  </div>
+                  <div class="mock-trow blur-md">
+                    <span class="ent-pill"><span class="av a1">BN</span>Bouskila Natanael</span>
+                    <span class="mock-score"><span class="b x">22</span><span>Faible</span></span>
+                    <span>Lead</span>
+                    <span></span>
+                    <span class="mock-cell-muted">3 sem.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="carousel-nav">
+        <button class="nav-arrow" id="prevBtn" title="Précédent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="carousel-dots" id="carouselDots">
+          <span class="dot active" data-go="0"></span>
+          <span class="dot" data-go="1"></span>
+          <span class="dot" data-go="2"></span>
+        </div>
+        <span class="carousel-counter" id="carouselCounter">1 / 3</span>
+        <button class="nav-arrow" id="nextBtn" title="Suivant">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.carousel-dots .dot');
+  const counter = document.getElementById('carouselCounter');
+
+  function goToSlide(idx) {
+    const prev = currentSlide;
+    currentSlide = ((idx % slides.length) + slides.length) % slides.length;
+    slides.forEach((s, i) => {
+      s.classList.remove('active','prev');
+      if (i === currentSlide) s.classList.add('active');
+      else if (i === prev && prev !== currentSlide) s.classList.add('prev');
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+  }
+  dots.forEach(d => d.addEventListener('click', () => { goToSlide(parseInt(d.dataset.go, 10)); resetTimer(); }));
+  document.getElementById('prevBtn').addEventListener('click', () => { goToSlide(currentSlide - 1); resetTimer(); });
+  document.getElementById('nextBtn').addEventListener('click', () => { goToSlide(currentSlide + 1); resetTimer(); });
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (e.key === 'ArrowLeft') { goToSlide(currentSlide - 1); resetTimer(); }
+    if (e.key === 'ArrowRight') { goToSlide(currentSlide + 1); resetTimer(); }
+  });
+
+  // Auto-rotate — un seul timer à la fois, toujours nettoyé avant d'en créer un nouveau
+  let autoTimer = null;
+  function stopTimer() { if (autoTimer != null) { clearInterval(autoTimer); autoTimer = null; } }
+  function startTimer() { stopTimer(); autoTimer = setInterval(() => goToSlide(currentSlide + 1), 5000); }
+  function resetTimer() { startTimer(); }
+  startTimer();
+  document.querySelector('.carousel').addEventListener('mouseenter', stopTimer);
+  document.querySelector('.carousel').addEventListener('mouseleave', startTimer);
+
+  // Login submit
+  document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const pwd = document.getElementById('password').value;
+    const alert = document.getElementById('loginAlert');
+    if (!email || !pwd) {
+      alert.textContent = 'Veuillez remplir tous les champs.';
+      alert.classList.add('show');
+      return;
+    }
+    if (document.getElementById('remember').checked) {
+      try { localStorage.setItem('cu_session_email', email); } catch {}
+    }
+    alert.classList.remove('show');
+    const btn = e.submitter || document.querySelector('.btn-primary');
+    btn.textContent = 'Connexion en cours…';
+    btn.disabled = true;
+    setTimeout(() => { window.location.href = 'index.html'; }, 500);
+  });
+</script>
+</body>
+</html>
