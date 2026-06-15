@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catch Up — Pipeline commercial</title>
+<meta name="description" content="Catch Up · CRM commercial — pipeline, contacts, opportunités, tâches et campagnes.">
+<meta http-equiv="refresh" content="0; url=dashboard_commercial.html">
+<link rel="canonical" href="dashboard_commercial.html">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #f7f7f8; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    color: #1a1a1f;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .wrap { max-width: 320px; padding: 32px 24px; }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid #ececef;
+    border-top-color: #1a1a1f;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  p { color: #6b6b75; font-size: 13.5px; margin: 0 0 16px; }
+  a { color: #1a1a1f; font-weight: 600; text-decoration: none; border-bottom: 1px solid #e3e3e6; padding-bottom: 1px; }
+  a:hover { border-bottom-color: #1a1a1f; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="spinner" aria-hidden="true"></div>
+  <p>Ouverture de Catch Up…</p>
+  <p>Si la redirection ne se fait pas automatiquement, <a href="dashboard_commercial.html">cliquez ici</a>.</p>
+</div>
+<script>
+  // JS fallback en cas de blocage du meta-refresh
+  window.location.replace('dashboard_commercial.html');
+</script>
+</body>
+</html>
