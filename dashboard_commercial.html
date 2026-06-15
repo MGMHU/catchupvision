@@ -4535,6 +4535,20 @@
     thead th, tbody td { padding: 10px 14px; }
   }
 
+  /* Tracking — iframe plein écran à l'intérieur du shell */
+  #page-tracking.active {
+    display: flex !important;
+    flex-direction: column;
+    height: calc(100vh - 0px);
+    min-height: 0;
+    padding: 0;
+    background: var(--bg);
+  }
+  #page-tracking #trackingFrame {
+    flex: 1; width: 100%; height: 100%;
+    border: 0; background: var(--bg);
+  }
+
   /* =================== CONTACT DETAIL — full-page card =================== */
   .cc-page { display: grid; grid-template-columns: 280px 1fr 320px; gap: 18px; align-items: start; }
   .cc-back {
@@ -5850,6 +5864,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 4 4 5-7"/></svg>
         <span>Reporting</span>
       </div>
+      <div class="nav-item" data-page="tracking" draggable="true">
+        <span class="nav-grip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10A15.3 15.3 0 0 1 8 12a15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>Tracking site web</span>
+      </div>
 
       <div class="nav-divider"></div>
       <div class="nav-item" data-page="settings" data-fixed="bottom">
@@ -6541,6 +6560,12 @@
       </div>
     </div>
     <!-- /page-company-detail -->
+
+    <!-- ============ TRACKING SITE WEB ============ -->
+    <div class="page-content" id="page-tracking">
+      <iframe src="tracking.html" id="trackingFrame" title="Tracking site web" style="border:0; width:100%; height:100%; background:var(--bg); display:block;"></iframe>
+    </div>
+    <!-- /page-tracking -->
 
   </main>
 
@@ -8772,6 +8797,14 @@ function showPage(page) {
   if (page === 'forms') renderFormsModule();
   if (page === 'contact-detail') renderContactDetail();
   if (page === 'company-detail') renderCompanyDetail();
+  if (page === 'tracking') {
+    // Lazy-load the iframe the first time the tab is opened
+    const fr = document.getElementById('trackingFrame');
+    if (fr && !fr.dataset.loaded) {
+      // src is already set; mark as loaded
+      fr.dataset.loaded = '1';
+    }
+  }
 }
 
 /* ===== Emails page (centralized list of emails sent via Catch Up) ===== */
