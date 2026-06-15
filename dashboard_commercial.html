@@ -4535,18 +4535,18 @@
     thead th, tbody td { padding: 10px 14px; }
   }
 
-  /* Tracking — iframe plein écran à l'intérieur du shell */
+  /* Tracking — iframe plein écran à l'intérieur du shell (fond blanc) */
   #page-tracking.active {
     display: flex !important;
     flex-direction: column;
     height: calc(100vh - 0px);
     min-height: 0;
     padding: 0;
-    background: var(--bg);
+    background: #ffffff;
   }
   #page-tracking #trackingFrame {
     flex: 1; width: 100%; height: 100%;
-    border: 0; background: var(--bg);
+    border: 0; background: #ffffff;
   }
 
   /* =================== CONTACT DETAIL — full-page card =================== */
@@ -6563,7 +6563,7 @@
 
     <!-- ============ TRACKING SITE WEB ============ -->
     <div class="page-content" id="page-tracking">
-      <iframe src="tracking.html" id="trackingFrame" title="Tracking site web" style="border:0; width:100%; height:100%; background:var(--bg); display:block;"></iframe>
+      <iframe src="tracking.html" id="trackingFrame" title="Tracking site web" style="border:0; width:100%; height:100%; background:#ffffff; display:block;"></iframe>
     </div>
     <!-- /page-tracking -->
 
@@ -7105,6 +7105,46 @@ const STATUS_ORDER = [
   "Gagné",
   "Perdu",
 ];
+/* Alias map — normalise les variantes anglaises / mal formatées vers les
+   labels canoniques français. Indispensable pour que le Kanban (filtre
+   strict r.status === col.status) range correctement les opps. */
+const STATUS_ALIASES = {
+  // Perdu
+  'lost': 'Perdu',
+  'closed lost': 'Perdu',
+  'closed-lost': 'Perdu',
+  'perdu': 'Perdu',
+  // Gagné
+  'won': 'Gagné',
+  'closed won': 'Gagné',
+  'closed-won': 'Gagné',
+  'gagne': 'Gagné',
+  'gagné': 'Gagné',
+  // Nouveau
+  'new': 'Nouveau',
+  'open': 'Nouveau',
+  'nouveau': 'Nouveau',
+  // Devis / Offre envoyé
+  'quote': 'Devis/Offre envoyé',
+  'quote sent': 'Devis/Offre envoyé',
+  'proposal sent': 'Devis/Offre envoyé',
+  'offer sent': 'Devis/Offre envoyé',
+  // Rendez-vous prévu
+  'meeting': 'Rendez-vous prévu',
+  'meeting scheduled': 'Rendez-vous prévu',
+  'appointment': 'Rendez-vous prévu',
+  // En attente / à relancer
+  'waiting': 'En attente/à relancer',
+  'on hold': 'En attente/à relancer',
+  'follow up': 'En attente/à relancer',
+  'à relancer': 'En attente/à relancer',
+  'a relancer': 'En attente/à relancer',
+};
+function normalizeStatus(s) {
+  if (!s) return s;
+  const key = String(s).toLowerCase().trim();
+  return STATUS_ALIASES[key] || s;
+}
 const AVATAR_PALETTE = ["#fde0e9","#d6f1dc","#fff0c2","#ffd9da","#d8eff3","#e0e4ff","#f4e0ff","#d9efe9"];
 const MONTHS_FR = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
 
@@ -7495,7 +7535,7 @@ function normalizeFromJSON(data) {
       contact: o.fullName || '',
       amount: parseFloat(o.amount || '0') || 0,
       percentage: parseFloat(o.percentage || '0') || 0,
-      status: o.opportunity_status || o.statut || '',
+      status: normalizeStatus(o.opportunity_status || o.statut || ''),
       followUp: o.updated_at || '',
       createdAt: o.created_at || '',
       userId: o.user_id,
