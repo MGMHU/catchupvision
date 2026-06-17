@@ -4535,6 +4535,861 @@
     thead th, tbody td { padding: 10px 14px; }
   }
 
+  /* ============ TASK MODAL — entity picker + mode toggle ============ */
+  .entity-pick-tabs {
+    display: inline-flex; gap: 4px;
+    background: #f1f2f5;
+    border-radius: 9px;
+    padding: 3px;
+    margin-bottom: 8px;
+    width: 100%;
+  }
+  .entity-pick-tabs button {
+    flex: 1;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12.5px; font-weight: 600;
+    transition: background 0.12s, color 0.12s;
+    font-family: inherit;
+  }
+  .entity-pick-tabs button:hover { color: var(--text); }
+  .entity-pick-tabs button.active {
+    background: #fff; color: var(--text);
+    box-shadow: 0 1px 2px rgba(16,17,21,0.06);
+  }
+  .task-mode-pick {
+    display: inline-flex; gap: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    overflow: hidden;
+    width: 100%;
+  }
+  .task-mode-pick button {
+    flex: 1;
+    background: #fff; border: none;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 9px 8px;
+    font-size: 12px; font-weight: 600;
+    transition: background 0.12s, color 0.12s;
+    font-family: inherit;
+  }
+  .task-mode-pick button:last-child { border-right: none; }
+  .task-mode-pick button:hover { color: var(--text); background: #fafafb; }
+  .task-mode-pick button.active {
+    background: var(--text); color: #fff;
+  }
+  .task-mode-pick button[data-mode="auto"].active   { background: #156b39; }
+  .task-mode-pick button[data-mode="semi"].active   { background: #2f4dcb; }
+  .task-mode-pick button[data-mode="manual"].active { background: var(--text); }
+
+  /* Eye / Send actions in task list (email-type) */
+  .task-quick .quick-btn.preview {
+    color: #2f4dcb; background: #eaf0ff;
+  }
+  .task-quick .quick-btn.preview:hover { background: #2f4dcb; color: #fff; }
+  .task-quick .quick-btn.send {
+    color: #156b39; background: #d9f5e3;
+  }
+  .task-quick .quick-btn.send:hover { background: #156b39; color: #fff; }
+
+  /* Task list — entity badge + comment snippet */
+  .task-entity-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 9px 2px 3px;
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-size: 11px; font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .task-entity-pill .av-mini {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #1a1a1f;
+    flex-shrink: 0;
+  }
+  .task-entity-pill .ent-kind {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-faint); font-weight: 700;
+  }
+
+  /* Task mode chip on the card */
+  .task-mode-chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 9.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 1px 7px; border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: #fff;
+  }
+  .task-mode-chip.auto   { background: #d9f5e3; color: #156b39; border-color: #b6e7c4; }
+  .task-mode-chip.semi   { background: #eaf0ff; color: #2f4dcb; border-color: #c8d5fb; }
+  .task-mode-chip.manual { background: #f4f5f7; color: var(--text-muted); }
+
+  /* Task runner — chained tasks in current view */
+  .task-run-bar {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--text); color: #fff;
+    border: none; border-radius: 999px;
+    padding: 6px 14px 6px 10px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.08s;
+    font-family: inherit;
+  }
+  .task-run-bar:hover { background: #000; }
+  .task-run-bar:active { transform: scale(0.98); }
+  .task-run-bar svg { width: 14px; height: 14px; }
+  .task-run-bar .cnt { background: rgba(255,255,255,0.20); padding: 0 7px; border-radius: 999px; font-size: 11px; }
+
+  /* Task runner popover (next task driver) */
+  .runner-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15,17,24,0.42);
+    z-index: 280;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.18s;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .runner-backdrop.show { opacity: 1; pointer-events: auto; }
+  .runner-modal {
+    background: #fff; border-radius: 16px;
+    width: 100%; max-width: 640px; max-height: 90vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 48px rgba(16,17,21,0.20);
+    overflow: hidden;
+    transform: translateY(10px);
+    transition: transform 0.22s ease;
+  }
+  .runner-backdrop.show .runner-modal { transform: translateY(0); }
+  .runner-head {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .runner-head h2 {
+    margin: 0; font-size: 15px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .runner-head .runner-prog {
+    margin-left: auto; font-size: 12px; color: var(--text-muted); font-weight: 600;
+  }
+  .runner-head .runner-close {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .runner-head .runner-close:hover { background: #f4f5f7; color: var(--text); }
+  .runner-head .runner-close svg { width: 14px; height: 14px; }
+  .runner-body { flex: 1; overflow-y: auto; padding: 18px 22px; }
+  .runner-task-title { font-size: 17px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .runner-task-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .runner-section {
+    background: #fafafb; border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 14px;
+    margin-bottom: 10px;
+  }
+  .runner-section .lbl {
+    font-size: 10.5px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .runner-section input, .runner-section textarea {
+    width: 100%;
+    border: 1px solid var(--border-strong); border-radius: 7px;
+    padding: 8px 11px; font: inherit; font-size: 13px;
+    background: #fff; outline: none;
+  }
+  .runner-section textarea { min-height: 140px; resize: vertical; }
+  .runner-section input:focus, .runner-section textarea:focus {
+    border-color: var(--text); box-shadow: 0 0 0 3px rgba(26,26,31,0.05);
+  }
+  .runner-foot {
+    border-top: 1px solid var(--border);
+    background: #fafafb;
+    padding: 12px 20px;
+    display: flex; gap: 8px; justify-content: space-between; align-items: center;
+  }
+  .runner-foot .skip {
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 12.5px; font-weight: 600;
+    padding: 6px 10px;
+  }
+  .runner-foot .skip:hover { color: var(--text); }
+  .runner-foot .primary {
+    background: var(--text); color: #fff; border: none;
+    padding: 9px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .runner-foot .primary:hover { background: #000; }
+  .runner-foot .primary svg { width: 13px; height: 13px; }
+
+  /* ============ Compact task list (override) ============ */
+  .task-list .task-card { padding: 8px 12px; gap: 9px; }
+  .task-list .task-card .task-title { font-size: 13px; font-weight: 600; line-height: 1.3; }
+  .task-list .task-card .task-type-icon { width: 28px; height: 28px; border-radius: 7px; }
+  .task-list .task-card .task-type-icon svg { width: 13px; height: 13px; }
+  .task-list .task-card .task-check { width: 18px; height: 18px; }
+  .task-list .task-card .task-check svg { width: 10px; height: 10px; }
+  .task-list .task-card .task-meta-row { gap: 4px 7px; margin-top: 3px; font-size: 10px; }
+  .task-list .task-card .task-due { font-size: 10px; padding: 1px 6px; }
+  .task-list .task-card .task-entity-pill { font-size: 10.5px; padding: 1px 7px 1px 3px; max-width: 180px; }
+  .task-list .task-card .task-entity-pill .ent-kind { font-size: 8.5px; }
+  .task-list .task-card .task-mode-chip { font-size: 9px; padding: 1px 6px; }
+  .task-list .task-card .task-context {
+    margin-top: 4px; padding: 4px 9px; font-size: 11.5px;
+    line-height: 1.4;
+  }
+  .task-list .task-card .quick-btn { width: 26px; height: 26px; }
+  .task-list .task-card .quick-btn svg { width: 12px; height: 12px; }
+
+  /* Cadence / campaign chip on the task card */
+  .task-cad-chip, .task-camp-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600;
+    padding: 1px 8px 1px 6px; border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: #fff; color: var(--text);
+    cursor: pointer; text-decoration: none;
+    line-height: 1.4;
+    max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .task-cad-chip { background: #f4ecff; border-color: #d8c5fc; color: #5b21b6; }
+  .task-cad-chip:hover { background: #e8dafd; }
+  .task-camp-chip { background: #fff4e0; border-color: #fbd9a4; color: #8a4a00; }
+  .task-camp-chip:hover { background: #ffe7c2; }
+  .task-cad-chip svg, .task-camp-chip svg { width: 9px; height: 9px; }
+  .task-cad-chip .step-frac, .task-camp-chip .step-frac {
+    font-size: 9.5px; opacity: 0.7; font-weight: 500; margin-left: 2px;
+  }
+
+  /* ============ TASK MODAL — full-width composer, cascade entity picker ============ */
+  /* Override the global .modal-overlay padding so the modal can stretch */
+  #taskModal.modal-overlay { padding: 16px !important; }
+  #taskModal .modal {
+    max-width: 1280px !important;
+    width: calc(100vw - 32px) !important;
+    box-sizing: border-box !important;
+  }
+  #taskModal .modal-body {
+    padding: 24px 36px !important;
+    box-sizing: border-box;
+  }
+  #taskModal .field { margin-bottom: 16px; width: 100%; }
+  /* Force every form control inside the modal to span the full width */
+  #taskModal input.input,
+  #taskModal textarea.textarea,
+  #taskModal select.select,
+  #taskModal input[type="text"],
+  #taskModal input[type="date"],
+  #taskModal input[type="email"],
+  #taskModal textarea,
+  #taskModal select {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif !important;
+  }
+  /* Generous sizing — same vibe as the runner email composer */
+  #taskModal #taskTitle {
+    font-size: 15px !important; font-weight: 500 !important;
+    padding: 14px 16px !important; border-radius: 11px !important;
+  }
+  #taskModal #taskSubject {
+    font-size: 14.5px !important; font-weight: 500 !important;
+    padding: 13px 16px !important; border-radius: 11px !important;
+  }
+  #taskModal #taskBody {
+    min-height: 340px !important;
+    font-size: 14.5px !important; line-height: 1.65 !important;
+    padding: 16px 18px !important; border-radius: 12px !important;
+    resize: vertical;
+  }
+  #taskModal #taskNote {
+    min-height: 160px !important;
+    font-size: 14px !important; line-height: 1.6 !important;
+    padding: 14px 16px !important; border-radius: 11px !important;
+    resize: vertical;
+  }
+  /* Make sure inline width="100%" on grids doesn't shrink children */
+  #taskModal .modal-body > div[style*="grid"] { width: 100%; }
+  /* Cascade auto-derived line shown under primary entity */
+  .cascade-line {
+    display: flex; flex-wrap: wrap; gap: 6px 10px;
+    align-items: center;
+    margin-top: 8px;
+    padding: 8px 11px;
+    background: #fafafb;
+    border: 1px dashed var(--border-strong);
+    border-radius: 9px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .cascade-line .cl-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px; color: var(--text);
+    font-weight: 500;
+  }
+  .cascade-line .cl-tag .lbl { color: var(--text-faint); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+  .cascade-sub-select {
+    width: 100%; margin-top: 6px;
+  }
+  .cascade-sub-label {
+    display: block; font-size: 10.5px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.03em;
+    font-weight: 600;
+    margin: 8px 0 4px;
+  }
+
+  /* Template picker — small inline dropdown */
+  .tpl-picker {
+    position: relative; display: inline-block;
+  }
+  .tpl-picker-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fff; border: 1px solid var(--border-strong);
+    border-radius: 7px; padding: 4px 9px;
+    font-size: 11.5px; font-weight: 600; color: var(--text);
+    cursor: pointer; font-family: inherit;
+  }
+  .tpl-picker-btn:hover { background: #f4f5f7; }
+  .tpl-picker-btn svg { width: 11px; height: 11px; }
+  .tpl-picker-menu {
+    position: absolute; top: calc(100% + 4px); right: 0;
+    background: #fff; border: 1px solid var(--border-strong);
+    border-radius: 9px; box-shadow: 0 8px 24px rgba(16,17,21,0.10);
+    padding: 5px;
+    min-width: 240px; max-width: 320px;
+    z-index: 300;
+    display: none;
+  }
+  .tpl-picker.open .tpl-picker-menu { display: block; }
+  .tpl-picker-menu .tpl-item {
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 12.5px; cursor: pointer;
+    color: var(--text);
+  }
+  .tpl-picker-menu .tpl-item:hover { background: #f4f5f7; }
+  .tpl-picker-menu .tpl-item .tpl-sub {
+    font-size: 10.5px; color: var(--text-muted); margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Runner — bigger, smarter, with email preview + live notes */
+  .runner-backdrop { padding: 16px !important; }
+  .runner-modal {
+    max-width: 1280px !important;
+    width: calc(100vw - 32px) !important;
+    max-height: 94vh !important;
+    box-sizing: border-box;
+  }
+  .runner-body { padding: 22px 32px !important; box-sizing: border-box; }
+  .runner-section { padding: 14px 18px; }
+  .runner-section input, .runner-section textarea {
+    width: 100% !important; max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: block !important;
+  }
+  .runner-section textarea { min-height: 220px; font-size: 14px; line-height: 1.6; padding: 12px 14px; }
+  .runner-section .lbl-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .runner-context {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 11px 14px;
+    background: linear-gradient(180deg, #fafbff 0%, #f4f5fc 100%);
+    border: 1px solid #e0e3f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+  .runner-context .rc-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; color: var(--text);
+  }
+  .runner-context .rc-lbl {
+    font-size: 9.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700;
+  }
+  .runner-context .rc-val { font-weight: 600; }
+  .runner-context .rc-divider { width: 1px; height: 13px; background: #d8dbe7; }
+
+  /* Email preview card (in runner) */
+  .runner-email-mode {
+    display: inline-flex; gap: 0; margin-left: auto;
+    background: #f1f2f5; border-radius: 7px; padding: 2px;
+  }
+  .runner-email-mode button {
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 5px; padding: 4px 10px;
+    font-size: 11px; font-weight: 600; font-family: inherit;
+  }
+  .runner-email-mode button.active { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(16,17,21,0.06); }
+  .runner-email-preview {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    box-shadow: 0 2px 8px rgba(16,17,21,0.04);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .runner-email-preview .rep-line {
+    display: flex; gap: 10px; padding: 4px 0;
+    font-size: 12.5px; color: var(--text);
+    border-bottom: 1px solid #f1f2f5;
+  }
+  .runner-email-preview .rep-line:last-of-type { border-bottom: none; padding-bottom: 8px; }
+  .runner-email-preview .rep-lbl { color: var(--text-muted); font-weight: 600; min-width: 50px; flex-shrink: 0; }
+  .runner-email-preview .rep-val { color: var(--text); }
+  .runner-email-preview .rep-subject {
+    margin: 10px 0 0;
+    font-size: 14px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .runner-email-preview .rep-body {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 13px; line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  /* Editable preview inputs — look like the rendered preview, not a form field */
+  .runner-email-preview.editable .rep-subject-input {
+    display: block !important;
+    width: 100% !important; max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 12px 0 0 !important;
+    padding: 6px 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px dashed transparent !important;
+    font-size: 15px !important; font-weight: 700 !important; color: var(--text) !important;
+    letter-spacing: -0.005em !important;
+    font-family: inherit !important;
+    outline: none !important;
+  }
+  .runner-email-preview.editable .rep-subject-input:focus { border-bottom-color: var(--text) !important; }
+  .runner-email-preview.editable .rep-body-input {
+    display: block !important;
+    width: 100% !important; max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-top: 14px !important;
+    padding: 16px 0 0 !important;
+    border: none !important;
+    border-top: 1px solid var(--border) !important;
+    background: transparent !important;
+    font-family: inherit !important;
+    font-size: 14px !important; line-height: 1.65 !important;
+    color: var(--text) !important;
+    outline: none !important;
+    resize: vertical !important;
+    min-height: 340px !important;
+  }
+  .runner-email-preview.editable .rep-body-input:focus { border-top-color: var(--text) !important; }
+
+  /* Recipient pills (À: contact + email) */
+  .rep-pills { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .rep-pills .rp-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 9px 2px 3px;
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-size: 11.5px; font-weight: 500;
+    color: var(--text); white-space: nowrap;
+  }
+  .rep-pills .rp-pill.email {
+    background: #eaf0ff; border-color: #c8d5fb; color: #2f4dcb;
+    padding: 2px 10px;
+  }
+  .rep-pills .rp-pill .rp-av {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+
+  /* In-app email toolbar (insert tag, signature, etc.) */
+  .runner-mail-toolbar {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    align-items: center;
+    margin-top: 12px;
+    padding: 7px 0 9px;
+    border-bottom: 1px solid var(--border);
+  }
+  .runner-mail-toolbar .mtb-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    padding: 5px 9px;
+    border-radius: 7px;
+    font-size: 11.5px; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+  }
+  .runner-mail-toolbar .mtb-btn:hover { background: #f4f5f7; color: var(--text); }
+  .runner-mail-toolbar .mtb-btn svg { width: 12px; height: 12px; }
+  .runner-mail-toolbar .mtb-divider { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+
+  /* Generic small dropdown menu used by the toolbar (tags + signature) */
+  .mtb-dd { position: relative; display: inline-block; }
+  .mtb-dd-menu {
+    position: absolute; top: calc(100% + 4px); left: 0;
+    background: #fff; border: 1px solid var(--border-strong);
+    border-radius: 9px; box-shadow: 0 8px 24px rgba(16,17,21,0.10);
+    padding: 5px;
+    min-width: 240px; max-height: 320px; overflow-y: auto;
+    z-index: 320;
+    display: none;
+  }
+  .mtb-dd.open .mtb-dd-menu { display: block; }
+  .mtb-dd-menu .mtb-item {
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 12.5px; cursor: pointer;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mtb-dd-menu .mtb-item:hover { background: #f4f5f7; }
+  .mtb-dd-menu .mtb-item code {
+    background: #eaf0ff; color: #2f4dcb;
+    padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+  }
+  .mtb-dd-menu .mtb-item .mtb-sub {
+    font-size: 11px; color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  /* Signature modal */
+  .sig-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15,17,24,0.42);
+    z-index: 340;
+    display: none; align-items: center; justify-content: center;
+  }
+  .sig-backdrop.show { display: flex; }
+  .sig-modal {
+    background: #fff; border-radius: 14px;
+    width: 100%; max-width: 560px;
+    box-shadow: 0 24px 48px rgba(16,17,21,0.20);
+    overflow: hidden;
+  }
+  .sig-head {
+    padding: 16px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sig-head h3 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .sig-head .sig-close {
+    margin-left: auto;
+    width: 28px; height: 28px; border-radius: 7px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sig-head .sig-close:hover { background: #f4f5f7; color: var(--text); }
+  .sig-body { padding: 18px 22px; }
+  .sig-body label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+  .sig-body textarea {
+    width: 100%; box-sizing: border-box;
+    min-height: 180px;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    padding: 11px 13px;
+    font: inherit; font-size: 13px; line-height: 1.55;
+    background: #fff; color: var(--text);
+    resize: vertical; outline: none;
+  }
+  .sig-body textarea:focus { border-color: var(--text); }
+  .sig-body .sig-hint { font-size: 11.5px; color: var(--text-faint); margin-top: 8px; }
+  .sig-foot {
+    padding: 12px 22px; border-top: 1px solid var(--border);
+    background: #fafafb;
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+  .sig-foot button {
+    background: #fff; border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 8px 14px;
+    font: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--text); cursor: pointer;
+  }
+  .sig-foot button.primary {
+    background: var(--text); color: #fff; border-color: var(--text);
+  }
+
+  /* Runner — task selection step (before launching) */
+  .runner-select-actions {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    align-items: center;
+    padding: 4px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .runner-select-actions .rs-chip {
+    background: #fff; border: 1px solid var(--border-strong);
+    border-radius: 999px; padding: 4px 10px;
+    font-size: 11.5px; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; font-family: inherit;
+  }
+  .runner-select-actions .rs-chip:hover { background: #f4f5f7; color: var(--text); }
+  .runner-select-actions .rs-chip.active { background: var(--text); color: #fff; border-color: var(--text); }
+  .runner-select-actions .rs-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+  .runner-select-list {
+    display: flex; flex-direction: column; gap: 4px;
+    max-height: 52vh; overflow-y: auto;
+    padding-right: 4px;
+  }
+  .runner-select-row {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .runner-select-row:hover { background: #fafafb; border-color: #d0d2d8; }
+  .runner-select-row.selected { background: #f4f8ff; border-color: #c7d5fb; }
+  .runner-select-row .rs-check {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 1.6px solid #cfd1d8;
+    background: #fff; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .runner-select-row.selected .rs-check { background: #2f4dcb; border-color: #2f4dcb; }
+  .runner-select-row .rs-check svg { width: 11px; height: 11px; opacity: 0; }
+  .runner-select-row.selected .rs-check svg { opacity: 1; }
+  .runner-select-row .rs-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: #f3f4f8; color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .runner-select-row .rs-icon svg { width: 13px; height: 13px; }
+  .runner-select-row .rs-body { flex: 1; min-width: 0; }
+  .runner-select-row .rs-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .runner-select-row .rs-meta {
+    margin-top: 2px;
+    font-size: 10.5px; color: var(--text-muted);
+    display: flex; gap: 4px 8px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .runner-select-empty {
+    text-align: center; color: var(--text-muted);
+    padding: 40px 16px; font-size: 13px;
+  }
+  .runner-foot .sel-count {
+    color: var(--text-muted); font-size: 12px;
+    margin-right: auto;
+  }
+  .runner-foot .sel-count strong { color: var(--text); font-weight: 700; }
+
+  /* Task assignment — pill on the card + "assigned by" line in modal */
+  .task-assign-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 1px 8px 1px 2px;
+    background: #f1f2f5;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 10.5px; font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .task-assign-pill .ap-av {
+    width: 16px; height: 16px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 8.5px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .task-assign-pill .ap-by {
+    color: var(--text-faint); font-size: 9.5px; margin-left: 4px;
+    padding-left: 5px; border-left: 1px solid var(--border-strong);
+  }
+  .task-assigned-by-line {
+    display: flex; align-items: center; gap: 6px;
+    margin: -4px 0 8px;
+    padding: 6px 10px;
+    background: #fafafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .task-assigned-by-line .ab-lbl {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-faint); font-weight: 700;
+  }
+  .task-assigned-by-line .ab-val { color: var(--text); font-weight: 600; }
+  .task-assigned-by-line .ab-when { color: var(--text-faint); margin-left: auto; font-size: 10.5px; }
+
+  /* Live notes section in runner */
+  .runner-live-note {
+    background: #fff8e6; border: 1px solid #f1dd9a;
+    border-radius: 10px; padding: 11px 14px; margin-bottom: 10px;
+  }
+  .runner-live-note .lbl {
+    font-size: 10.5px; font-weight: 700;
+    color: #8a6500; text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .runner-live-note .lbl svg { width: 12px; height: 12px; }
+  .runner-live-note textarea {
+    width: 100%;
+    border: 1px solid #f1dd9a; border-radius: 7px;
+    padding: 8px 11px; font: inherit; font-size: 13px;
+    background: #fffdf5; outline: none;
+    min-height: 70px; resize: vertical;
+  }
+  .runner-live-note textarea:focus { border-color: #b88a00; }
+
+  /* Sequence head — overdue badge + types summary + active/paused toggle */
+  .seq-head-icons {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-left: auto;
+  }
+  .seq-overdue-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #fde2e2; color: #8a1f1f;
+    border: 1px solid #f6c9c9;
+    border-radius: 999px;
+    padding: 3px 8px 3px 6px;
+    font-size: 10.5px; font-weight: 700;
+  }
+  .seq-overdue-badge svg { width: 11px; height: 11px; }
+  .seq-types-row {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 4px;
+    border-radius: 8px;
+  }
+  .seq-types-row .seq-type-mini {
+    display: inline-flex; align-items: center; gap: 2px;
+    padding: 2px 6px 2px 3px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+    color: var(--text-muted);
+  }
+  .seq-types-row .seq-type-mini .stm-ico {
+    width: 14px; height: 14px; border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .seq-types-row .seq-type-mini .stm-ico svg { width: 8px; height: 8px; }
+  .seq-types-row .seq-type-mini.call .stm-ico { background: #e0f4f6; color: #126b76; }
+  .seq-types-row .seq-type-mini.mail .stm-ico { background: #eaf0ff; color: #2f4dcb; }
+  .seq-types-row .seq-type-mini.meet .stm-ico { background: #d9f5e3; color: #156b39; }
+  .seq-types-row .seq-type-mini.linkedin .stm-ico { background: #e6f0fb; color: #0a66c2; }
+  .seq-types-row .seq-type-mini.whatsapp .stm-ico { background: #d9f5e3; color: #128c7e; }
+  .seq-types-row .seq-type-mini.sms .stm-ico { background: #fef3e8; color: #b45309; }
+  .seq-types-row .seq-type-mini.note .stm-ico { background: #fff3d6; color: #8a6500; }
+  .seq-types-row .seq-type-mini.todo .stm-ico { background: #f4e0ff; color: #6a2f9c; }
+
+  /* 2026 toggle — minimal: just a colored pulsing dot in a circular button.
+     Green = active, Red = paused. No text. */
+  .seq-status-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.16s, border-color 0.16s;
+    user-select: none;
+  }
+  .seq-status-toggle:hover { border-color: #b8bcc9; }
+  .seq-status-toggle .sst-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #cfd1d8;
+    position: relative;
+    transition: background 0.16s;
+  }
+  .seq-status-toggle.active { border-color: #b6e7c4; }
+  .seq-status-toggle.active .sst-dot { background: #1f9c52; }
+  .seq-status-toggle.active .sst-dot::before {
+    content: ''; position: absolute; inset: -3px; border-radius: 50%;
+    background: #1f9c52; opacity: 0.4;
+    animation: sst-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .seq-status-toggle.paused { border-color: #f6c9c9; background: #fff5f5; }
+  .seq-status-toggle.paused .sst-dot { background: #d04545; }
+  @keyframes sst-ping {
+    0%   { transform: scale(0.6); opacity: 0.5; }
+    80%  { transform: scale(1.9); opacity: 0;   }
+    100% { transform: scale(1.9); opacity: 0;   }
+  }
+  /* Hide the text labels — kept in markup for screen readers via aria */
+  .seq-status-toggle .sst-label-active,
+  .seq-status-toggle .sst-label-paused {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+
+  /* Paused sequence — dimmed visual */
+  .seq-group.paused .seq-group-head .sg-name,
+  .seq-group.paused .seq-group-head .cad-kind-chip { opacity: 0.55; }
+  .seq-group.paused .seq-group-body { opacity: 0.45; pointer-events: none; }
+  .seq-group.paused .seq-channel-row { opacity: 0.5; }
+  .seq-group.paused .sg-progress span { background: var(--text-faint); }
+
+  /* Per-sequence channel filter row inside the seq-group */
+  .seq-channel-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 8px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .seq-group.collapsed .seq-channel-row { display: none; }
+  .seq-channel-row .seq-ch-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fff; border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 3px 9px 3px 4px;
+    font-size: 11px; font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer; font-family: inherit;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .seq-channel-row .seq-ch-pill:hover { color: var(--text); background: #fafafb; }
+  .seq-channel-row .seq-ch-pill.active {
+    background: var(--text); color: #fff; border-color: var(--text);
+  }
+  .seq-channel-row .seq-ch-pill .sch-ico {
+    width: 18px; height: 18px; border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .seq-channel-row .seq-ch-pill .sch-ico svg { width: 10px; height: 10px; }
+  .seq-channel-row .seq-ch-pill .sch-cnt {
+    background: #f1f2f5; color: var(--text-muted);
+    padding: 0 6px; border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+  }
+  .seq-channel-row .seq-ch-pill.active .sch-cnt { background: rgba(255,255,255,0.18); color: #fff; }
+  .seq-channel-row .sch-empty { font-size: 11px; color: var(--text-faint); padding: 2px 0; }
+
   /* Tracking — iframe plein écran à l'intérieur du shell (fond blanc) */
   #page-tracking.active {
     display: flex !important;
@@ -6491,6 +7346,10 @@
                 Kanban
               </button>
             </div>
+            <button class="task-run-bar" id="taskRunStartBtn" title="Démarrer en chaîne les tâches de cette vue">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              Démarrer <span class="cnt" id="taskRunCount">0</span>
+            </button>
             <button class="btn-add" id="taskAddBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Nouvelle tâche
@@ -6827,16 +7686,17 @@
 
 <!-- Task add/edit modal -->
 <div class="modal-overlay" id="taskModal">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:880px">
     <div class="modal-head">
       <h2 id="taskModalTitle">Nouvelle tâche</h2>
       <button class="close" onclick="closeModal('taskModal')">✕</button>
     </div>
     <div class="modal-body">
       <div class="field">
-        <label>Motif <span class="muted" style="font-weight:400; font-size:11.5px;">(ce que tu dois faire)</span></label>
+        <label>Titre <span class="muted" style="font-weight:400; font-size:11.5px;">(ce que tu dois faire)</span></label>
         <input type="text" class="input" id="taskTitle" placeholder="Ex : Relancer Sodeplast pour le devis pièces">
       </div>
+
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
         <div class="field">
           <label>Type</label>
@@ -6844,6 +7704,9 @@
             <option value="call">📞 Appel</option>
             <option value="mail">✉ Email</option>
             <option value="meet">🤝 RDV</option>
+            <option value="linkedin">in LinkedIn</option>
+            <option value="whatsapp">💬 WhatsApp</option>
+            <option value="sms">📱 SMS</option>
             <option value="note">📝 Note</option>
             <option value="todo">✅ À faire</option>
           </select>
@@ -6857,22 +7720,96 @@
           </select>
         </div>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:12px;">
         <div class="field">
           <label>Échéance</label>
           <input type="date" class="input" id="taskDue">
         </div>
         <div class="field">
-          <label>Lier à une opportunité</label>
-          <select class="select" id="taskOpp" style="width:100%">
-            <option value="">— Aucune —</option>
+          <label>Assigné à</label>
+          <select class="select" id="taskAssignee" style="width:100%">
+            <option value="">— Moi —</option>
           </select>
         </div>
+        <div class="field">
+          <label>Mode d'exécution</label>
+          <div class="task-mode-pick" id="taskModePick">
+            <button type="button" data-mode="manual" class="active">Manuel</button>
+            <button type="button" data-mode="semi">Semi-auto</button>
+            <button type="button" data-mode="auto">Auto</button>
+          </div>
+        </div>
       </div>
+      <div class="task-assigned-by-line" id="taskAssignedByLine" style="display:none">
+        <span class="ab-lbl">Assignée par</span>
+        <span class="ab-val" id="taskAssignedByName">—</span>
+        <span class="ab-when" id="taskAssignedByWhen"></span>
+      </div>
+
       <div class="field">
-        <label>Contexte / historique <span class="muted" style="font-weight:400; font-size:11.5px;">(pourquoi cette tâche, ce qu'il faut savoir)</span></label>
-        <textarea class="textarea" id="taskNote" style="min-height:80px" placeholder="Ex : Devis envoyé le 14/05, client en CSE jusqu'au 10/06, décideur = M. Martin"></textarea>
+        <label>Entité liée <span class="muted" style="font-weight:400; font-size:11.5px;">(choisis d'abord puis les sous-éléments se filtrent automatiquement)</span></label>
+        <div class="entity-pick-tabs" id="entityPickTabs">
+          <button type="button" data-ent-tab="company">Entreprise</button>
+          <button type="button" data-ent-tab="contact">Contact</button>
+          <button type="button" data-ent-tab="opp" class="active">Opportunité</button>
+          <button type="button" data-ent-tab="none">Aucune</button>
+        </div>
+        <div class="entity-pick-body">
+          <!-- Opp tab -->
+          <div data-ent-input="opp">
+            <select class="select" id="taskOpp" style="width:100%">
+              <option value="">— Choisir une opportunité —</option>
+            </select>
+          </div>
+          <!-- Contact tab — filtré automatiquement par l'entreprise si une est choisie -->
+          <div data-ent-input="contact" style="display:none">
+            <select class="select" id="taskContact" style="width:100%">
+              <option value="">— Choisir un contact —</option>
+            </select>
+          </div>
+          <!-- Company tab -->
+          <div data-ent-input="company" style="display:none">
+            <select class="select" id="taskCompany" style="width:100%">
+              <option value="">— Choisir une entreprise —</option>
+            </select>
+          </div>
+          <!-- None tab -->
+          <div data-ent-input="none" style="display:none; padding:9px 12px; font-size:12.5px; color:var(--text-muted); background:#fafafb; border:1px solid var(--border); border-radius:8px;">
+            Tâche libre, non liée à une entité du CRM.
+          </div>
+          <!-- Cascade summary — montre ce qui est dérivé des autres onglets -->
+          <div class="cascade-line" id="taskCascadeSummary" style="display:none; margin-top:10px;"></div>
+        </div>
       </div>
+
+      <!-- Email-specific fields (objet + corps avec preview) — visibles si type=mail/linkedin/whatsapp/sms -->
+      <div id="taskMailFields" style="display:none">
+        <div class="field" id="taskSubjectField">
+          <label>Objet de l'email <span class="muted" style="font-weight:400; font-size:11.5px;">(tape <code>/</code> pour insérer un tag)</span></label>
+          <input type="text" class="input" id="taskSubject" placeholder="Ex : {{firstName}}, suivi de votre demande">
+        </div>
+        <div class="field">
+          <label id="taskBodyLabel" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <span>Corps du message <span class="muted" style="font-weight:400; font-size:11.5px;">(tape <code>/</code> pour les tags dynamiques)</span></span>
+            <span class="tpl-picker" id="taskTplPicker">
+              <button type="button" class="tpl-picker-btn" id="taskTplBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Insérer un template
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="tpl-picker-menu" id="taskTplMenu"></div>
+            </span>
+          </label>
+          <textarea class="textarea" id="taskBody" placeholder="Bonjour {{firstName}},&#10;&#10;Je reviens vers vous…"></textarea>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Commentaire / contexte <span class="muted" style="font-weight:400; font-size:11.5px;">(notes internes pour préparer la tâche)</span></label>
+        <textarea class="textarea" id="taskNote" placeholder="Ex : Devis envoyé le 14/05, décideur = M. Martin"></textarea>
+      </div>
+
       <div id="taskAlert"></div>
       <div style="display:flex; justify-content:space-between; gap:8px; margin-top:8px;">
         <button class="btn secondary" id="taskDeleteBtn" style="display:none">Supprimer</button>
@@ -8663,6 +9600,7 @@ const LS_KEYS = {
   userName:   'hu_user_name',
   userPic:    'hu_user_pic',
   data:       'hu_data',
+  userSig:    'hu_user_signature',
 };
 const DEFAULTS = { clientName: 'Catch Up', userName: 'Administrateur' };
 
@@ -15012,17 +15950,73 @@ function renderTaskDetail(t) {
   `;
 }
 
+function _taskEntityDisplay(t) {
+  // Resolve a unified entity display for the task card. Returns {kind,label,initials,phone,email,contact,company}.
+  const opp = t.opportunityId != null ? rawRows.find(r => r.id === t.opportunityId) : null;
+  if (t.entityType === 'company' || (t.company && !opp && !t.contactKey)) {
+    const name = t.company || t.entityId || '';
+    return { kind: 'company', label: name, initials: (name || '?')[0].toUpperCase(), company: name, contact: '', phone: '', email: '' };
+  }
+  if (t.entityType === 'contact' || (t.contactKey && !opp)) {
+    const c = (typeof buildContacts === 'function') ? buildContacts().find(x => x.key === (t.contactKey || t.entityId)) : null;
+    const name = (c && c.name) || t.contactName || '';
+    const init = (name || '?').split(/\s+/).map(w => (w[0]||'')).slice(0,2).join('').toUpperCase() || '?';
+    return { kind: 'contact', label: name + (c && c.company ? ' · ' + c.company : ''), initials: init, contact: name, company: c?.company || '', phone: c?.phone || '', email: c?.email || '' };
+  }
+  // Default : opportunité
+  if (opp) {
+    const co = opp.company || '';
+    return { kind: 'opp', label: co + (opp.contact ? ' — ' + opp.contact : ''), initials: (co || '?')[0].toUpperCase(), contact: opp.contact, company: co, phone: opp.contactPhone || '', email: opp.contactEmail || '' };
+  }
+  return { kind: 'none', label: '', initials: '', contact: '', company: '', phone: '', email: '' };
+}
+
+/* Resolve sequence / campaign context for the task — used in the list AND in the runner */
+function _taskCadenceInfo(t) {
+  if (!t || !t.cadenceId || typeof cadences === 'undefined') return null;
+  const cad = cadences.find(c => c.id === t.cadenceId);
+  if (!cad) return null;
+  const total = Array.isArray(cad.steps) ? cad.steps.length : 0;
+  // Compute progress for this contact within this cadence
+  let progressDone = 0, progressTotal = total;
+  if (t.contactKey && typeof tasks !== 'undefined') {
+    const sib = tasks.filter(x => x.cadenceId === t.cadenceId && x.contactKey === t.contactKey);
+    if (sib.length) {
+      progressTotal = sib.length;
+      progressDone = sib.filter(x => x.status === 'done').length;
+    }
+  }
+  return {
+    cadenceId: cad.id,
+    cadenceName: cad.name || 'Séquence',
+    step: t.cadenceStep || null,
+    totalSteps: total,
+    progressDone,
+    progressTotal,
+    kind: cad.kind || 'outbound',
+  };
+}
+function _taskCampaignInfo(t) {
+  if (!t || !t.campaignId || typeof campaigns === 'undefined') return null;
+  const c = campaigns.find(x => x.id === t.campaignId);
+  if (!c) return null;
+  return { campaignId: c.id, campaignName: c.name || 'Campagne', step: t.campaignStep || null };
+}
+
 function makeTaskCard(t) {
   const card = document.createElement('div');
   const isExpanded = expandedTaskId === t.id;
   card.className = 'task-card' + (t.status === 'done' ? ' done' : '') + (isExpanded ? ' expanded' : '');
   const due = dueLabel(t);
   const opp = t.opportunityId != null ? rawRows.find(r => r.id === t.opportunityId) : null;
-
-  const company = opp ? opp.company : (t.linkedCompany || '');
-  const contact = opp ? opp.contact : '';
-  const phone = opp ? (opp.contactPhone || '') : '';
-  const email = opp ? (opp.contactEmail || '') : '';
+  const ent = _taskEntityDisplay(t);
+  const company = ent.company;
+  const contact = ent.contact;
+  const phone = ent.phone;
+  const email = ent.email;
+  const mode = t.mode || 'manual';
+  const isEmailLike = EMAIL_LIKE_TYPES && EMAIL_LIKE_TYPES.has(t.type);
+  const hasBody = !!(t.body || (t.subject && t.type === 'mail'));
 
   card.innerHTML = `
     <div class="task-prio ${t.priority || 'med'}"></div>
@@ -15036,11 +16030,48 @@ function makeTaskCard(t) {
           <div class="task-title">${escapeHTML(t.title)}</div>
           <div class="task-meta-row">
             <span class="task-due ${due.cls}">${due.text}</span>
-            ${company ? `<span class="entity-pill company" data-opp="${t.opportunityId || ''}" title="Voir la carte société">${escapeHTML(company)}</span>` : ''}
-            ${contact ? `<span class="entity-pill contact" data-opp="${t.opportunityId || ''}" title="Voir la carte contact">${escapeHTML(contact)}</span>` : ''}
+            <span class="task-mode-chip ${mode}">${mode === 'auto' ? 'Auto' : mode === 'semi' ? 'Semi-auto' : 'Manuel'}</span>
+            ${ent.label ? `<span class="task-entity-pill" data-task-ent="${escapeHTML(ent.kind)}" data-task-ent-id="${escapeHTML(t.entityId || t.opportunityId || '')}" title="Voir ${escapeHTML(ent.kind === 'contact' ? 'le contact' : ent.kind === 'company' ? 'l\'entreprise' : 'l\'opportunité')}">
+              <span class="ent-kind">${ent.kind === 'contact' ? 'C' : ent.kind === 'company' ? 'E' : 'O'}</span>
+              <span>${escapeHTML(ent.label)}</span>
+            </span>` : ''}
+            ${(() => {
+              const ci = _taskCadenceInfo(t);
+              if (!ci) return '';
+              const stepTxt = ci.step ? `étape ${ci.step}${ci.totalSteps ? '/' + ci.totalSteps : ''}` : (ci.progressTotal ? `${ci.progressDone}/${ci.progressTotal}` : '');
+              return `<span class="task-cad-chip" data-task-cad="${escapeHTML(ci.cadenceId)}" title="Séquence : ${escapeHTML(ci.cadenceName)} — ${stepTxt}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                ${escapeHTML(ci.cadenceName)} <span class="step-frac">${escapeHTML(stepTxt)}</span>
+              </span>`;
+            })()}
+            ${(() => {
+              const cp = _taskCampaignInfo(t);
+              if (!cp) return '';
+              return `<span class="task-camp-chip" data-task-camp="${escapeHTML(cp.campaignId)}" title="Campagne : ${escapeHTML(cp.campaignName)}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                ${escapeHTML(cp.campaignName)}${cp.step ? ` <span class="step-frac">étape ${escapeHTML(String(cp.step))}</span>` : ''}
+              </span>`;
+            })()}
+            ${(() => {
+              const a = _taskAssigneeDisplay(t);
+              const by = _taskAssignedByDisplay(t);
+              const byPart = by && !by.isMe ? `<span class="ap-by">par ${escapeHTML(by.name)}</span>` : '';
+              const title = `Assigné à ${a.name}${by ? ' · par ' + by.name : ''}`;
+              return `<span class="task-assign-pill" title="${escapeHTML(title)}">
+                <span class="ap-av" style="background:${a.color}">${escapeHTML(a.initials)}</span>
+                <span>${escapeHTML(a.name)}</span>
+                ${byPart}
+              </span>`;
+            })()}
           </div>
         </div>
         <div class="task-quick">
+          ${isEmailLike && hasBody ? `<button class="quick-btn preview" data-act="preview-task" data-id="${t.id}" title="Prévisualiser le message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>` : ''}
+          ${isEmailLike && hasBody && email ? `<button class="quick-btn send" data-act="send-task" data-id="${t.id}" title="Envoyer et marquer terminé">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>` : ''}
           <a class="quick-btn call" ${phone ? `href="tel:${escapeHTML(phone)}"` : ''} ${phone ? '' : 'disabled aria-disabled="true"'} title="${phone ? 'Appeler ' + phone : 'Numéro non renseigné'}" onclick="${phone ? '' : 'event.preventDefault()'}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           </a>
@@ -15061,6 +16092,40 @@ function makeTaskCard(t) {
   `;
   card.querySelector('.task-check').addEventListener('click', e => { e.stopPropagation(); toggleTaskDone(t.id); });
   card.querySelector('[data-act="edit"]').addEventListener('click', e => { e.stopPropagation(); openTaskModal(t.id); });
+  // Preview / Send (email-like tasks)
+  card.querySelectorAll('[data-act="preview-task"]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); if (typeof openPreviewAndSend === 'function') openPreviewAndSend(t.id); }));
+  card.querySelectorAll('[data-act="send-task"]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); if (typeof openPreviewAndSend === 'function') openPreviewAndSend(t.id); }));
+  // Entity pill navigation
+  card.querySelectorAll('[data-task-ent]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const kind = el.dataset.taskEnt;
+      const eid = el.dataset.taskEntId;
+      if (kind === 'opp' && eid) openOppDrawer(parseInt(eid, 10));
+      else if (kind === 'contact' && eid && typeof openContactPageByKey === 'function') openContactPageByKey(eid);
+      else if (kind === 'company' && eid && typeof openCompanyPage === 'function') openCompanyPage(eid);
+    });
+  });
+  // Cadence chip → focus the sequence in the tasks view
+  card.querySelectorAll('[data-task-cad]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      if (typeof activeCadenceFilter !== 'undefined') {
+        activeCadenceFilter = el.dataset.taskCad;
+        if (typeof renderTasks === 'function') renderTasks();
+      } else if (typeof openCadenceManager === 'function') {
+        openCadenceManager(el.dataset.taskCad);
+      }
+    });
+  });
+  // Campaign chip → focus the campaign view
+  card.querySelectorAll('[data-task-camp]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      if (typeof openCampaignDetail === 'function') openCampaignDetail(el.dataset.taskCamp);
+      else if (typeof showPage === 'function') showPage('campaigns');
+    });
+  });
   const commentBtn = card.querySelector('[data-act="comment"]');
   if (commentBtn && opp) {
     commentBtn.addEventListener('click', e => { e.stopPropagation(); openCommentModal(opp.id, t.id); });
@@ -15279,43 +16344,310 @@ function toggleTaskDone(id) {
   renderTasks();
 }
 
+/* Entity types that the task can be linked to. Polymorphic + lightweight. */
+const TASK_ENTITY_TYPES = ['opp', 'contact', 'company', 'none'];
+const EMAIL_LIKE_TYPES = new Set(['mail', 'linkedin', 'whatsapp', 'sms']);
+
+function _populateTaskEntityPickers() {
+  // Opportunités
+  const oppSel = document.getElementById('taskOpp');
+  oppSel.innerHTML = '<option value="">— Choisir une opportunité —</option>' +
+    rawRows.map(r => `<option value="${r.id}">${escapeHTML(r.company || '—')} — ${escapeHTML(r.contact || '')}</option>`).join('');
+  // Contacts (dedupe par clé)
+  const contactSel = document.getElementById('taskContact');
+  const contacts = (typeof buildContacts === 'function') ? buildContacts() : [];
+  contactSel.innerHTML = '<option value="">— Choisir un contact —</option>' +
+    contacts.map(c => `<option value="${escapeHTML(c.key)}">${escapeHTML(c.name || '—')}${c.company ? ' — ' + escapeHTML(c.company) : ''}</option>`).join('');
+  // Entreprises
+  const companySel = document.getElementById('taskCompany');
+  const companies = (typeof buildCompanies === 'function') ? buildCompanies() : [];
+  companySel.innerHTML = '<option value="">— Choisir une entreprise —</option>' +
+    companies.map(c => `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}${c.contactsCount ? ' — ' + c.contactsCount + ' contact(s)' : ''}</option>`).join('');
+  // Assignee — list all unique users present in the data
+  const assigneeSel = document.getElementById('taskAssignee');
+  if (assigneeSel) {
+    const me = _currentUserName();
+    const users = (typeof uniqueUsers === 'function') ? uniqueUsers(rawRows) : [];
+    assigneeSel.innerHTML = `<option value="">— ${escapeHTML(me)} (moi) —</option>` +
+      users.map(u => `<option value="${u.id}">${escapeHTML(u.name)}</option>`).join('');
+  }
+}
+
+/* Helpers for "current user" — used as default assignee + assignedBy */
+function _currentUserName() {
+  return (typeof getStored === 'function' && getStored(LS_KEYS.userName)) || 'Moi';
+}
+function _userById(id) {
+  if (id == null) return null;
+  const all = (typeof uniqueUsers === 'function') ? uniqueUsers(rawRows) : [];
+  return all.find(u => String(u.id) === String(id)) || null;
+}
+function _taskAssigneeDisplay(t) {
+  // Returns { name, userId|null, initials, color }
+  if (t.assigneeId != null) {
+    const u = _userById(t.assigneeId);
+    if (u) {
+      return { name: u.name, userId: u.id, initials: initials(u.first, u.last), color: avatarColor(u.id) };
+    }
+  }
+  const me = _currentUserName();
+  return { name: me, userId: null, initials: (me || '?').split(/\s+/).map(w => (w[0]||'')).slice(0,2).join('').toUpperCase() || 'M', color: '#1a1a1f' };
+}
+function _taskAssignedByDisplay(t) {
+  if (!t.assignedBy) return null;
+  const me = _currentUserName();
+  return {
+    name: t.assignedBy,
+    isMe: t.assignedBy === me,
+    when: t.createdAt,
+  };
+}
+
+/* Cross-tab cascade : a single entity context (opp/contact/company), distributed
+   across the three native tab dropdowns. Picking on any tab filters the others
+   and auto-fills the upstream tabs. Reflects everything in a small summary line. */
+function _getCascadeState() {
+  const oppId      = document.getElementById('taskOpp')?.value || '';
+  const contactKey = document.getElementById('taskContact')?.value || '';
+  const companyName= document.getElementById('taskCompany')?.value || '';
+  const opp = oppId ? rawRows.find(r => String(r.id) === String(oppId)) : null;
+  const contact = contactKey && typeof buildContacts === 'function'
+    ? buildContacts().find(c => c.key === contactKey) : null;
+  return { oppId, contactKey, companyName, opp, contact };
+}
+
+function _refilterEntityPickers() {
+  // Decide the filtering company name : opp > contact > company tab value
+  const st = _getCascadeState();
+  let companyFilter = st.companyName;
+  if (st.opp && st.opp.company) companyFilter = st.opp.company;
+  else if (st.contact && st.contact.company) companyFilter = st.contact.company;
+  // Filter contacts dropdown
+  const contactSel = document.getElementById('taskContact');
+  if (contactSel) {
+    const all = (typeof buildContacts === 'function') ? buildContacts() : [];
+    const list = companyFilter ? all.filter(c => c.company === companyFilter) : all;
+    const keep = contactSel.value;
+    contactSel.innerHTML = `<option value="">— Choisir un contact${companyFilter ? ' chez ' + escapeHTML(companyFilter) : ''} —</option>` +
+      list.map(c => `<option value="${escapeHTML(c.key)}">${escapeHTML(c.name || '—')}${c.email ? ' · ' + escapeHTML(c.email) : ''}</option>`).join('');
+    if (keep && list.some(c => c.key === keep)) contactSel.value = keep;
+  }
+  // Filter opps dropdown
+  const oppSel = document.getElementById('taskOpp');
+  if (oppSel) {
+    let oppsList = rawRows;
+    if (companyFilter) oppsList = oppsList.filter(r => r.company === companyFilter);
+    if (st.contact) {
+      // narrow by contact too (intersect by contact name within the company)
+      oppsList = oppsList.filter(r => r.contact === st.contact.name);
+    }
+    const keep = oppSel.value;
+    oppSel.innerHTML = `<option value="">— Choisir une opportunité${st.contact ? ' de ' + escapeHTML(st.contact.name) : (companyFilter ? ' chez ' + escapeHTML(companyFilter) : '')} —</option>` +
+      oppsList.map(r => `<option value="${r.id}">${escapeHTML(r.company || '—')}${r.contact ? ' — ' + escapeHTML(r.contact) : ''}${typeof r.amount === 'number' && r.amount > 0 ? ' · ' + r.amount.toLocaleString('fr-FR') + ' €' : ''}</option>`).join('');
+    if (keep && oppsList.some(r => String(r.id) === String(keep))) oppSel.value = keep;
+  }
+}
+
+function _renderCascadeSummary() {
+  const st = _getCascadeState();
+  const box = document.getElementById('taskCascadeSummary');
+  if (!box) return;
+  const items = [];
+  // Derived hierarchy
+  let companyName = st.companyName;
+  let contactName = '';
+  let oppLabel = '';
+  if (st.opp) {
+    if (st.opp.company) companyName = st.opp.company;
+    if (st.opp.contact) contactName = st.opp.contact;
+    oppLabel = `${st.opp.status || 'Opp'}${typeof st.opp.amount === 'number' && st.opp.amount > 0 ? ' · ' + st.opp.amount.toLocaleString('fr-FR') + ' €' : ''}`;
+  }
+  if (st.contact) {
+    if (!companyName && st.contact.company) companyName = st.contact.company;
+    contactName = st.contact.name;
+  }
+  if (companyName) items.push(`<span class="cl-tag"><span class="lbl">Société</span> ${escapeHTML(companyName)}</span>`);
+  if (contactName) items.push(`<span class="cl-tag"><span class="lbl">Contact</span> ${escapeHTML(contactName)}</span>`);
+  if (oppLabel) items.push(`<span class="cl-tag"><span class="lbl">Opportunité</span> ${escapeHTML(oppLabel)}</span>`);
+  if (!items.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = '';
+  box.innerHTML = items.join('');
+}
+
+/* Public cascade hook : called on every change of any of the 3 selectors */
+function _onCascadeChange() {
+  _refilterEntityPickers();
+  _renderCascadeSummary();
+}
+
+function _switchEntityTab(kind) {
+  document.querySelectorAll('#entityPickTabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.entTab === kind);
+  });
+  document.querySelectorAll('.entity-pick-body > [data-ent-input]').forEach(el => {
+    el.style.display = (el.dataset.entInput === kind) ? '' : 'none';
+  });
+  // When switching to a tab, re-apply filters so the user sees the right
+  // subset based on what's already chosen elsewhere.
+  _refilterEntityPickers();
+  _renderCascadeSummary();
+}
+
+function _switchTaskMode(mode) {
+  document.querySelectorAll('#taskModePick button').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+}
+
+function _toggleTaskMailFields(type) {
+  const wrap = document.getElementById('taskMailFields');
+  const isEmailLike = EMAIL_LIKE_TYPES.has(type);
+  wrap.style.display = isEmailLike ? '' : 'none';
+  // Subject field hidden for non-email channels (linkedin/whatsapp/sms n'ont pas d'objet)
+  document.getElementById('taskSubjectField').style.display = type === 'mail' ? '' : 'none';
+  const lbl = document.getElementById('taskBodyLabel');
+  if (lbl) {
+    lbl.innerHTML = (type === 'mail' ? 'Corps de l\'email' : 'Message')
+      + ' <span class="muted" style="font-weight:400; font-size:11.5px;">(tape <code>/</code> pour les tags dynamiques)</span>';
+  }
+}
+
 function openTaskModal(id) {
   editingTaskId = id || null;
   const isEdit = !!id;
   document.getElementById('taskModalTitle').textContent = isEdit ? 'Éditer la tâche' : 'Nouvelle tâche';
   document.getElementById('taskDeleteBtn').style.display = isEdit ? '' : 'none';
 
-  // Populate opp select
-  const oppSel = document.getElementById('taskOpp');
-  oppSel.innerHTML = '<option value="">— Aucune —</option>' +
-    rawRows.map(r => `<option value="${r.id}">${escapeHTML(r.company || '—')} — ${escapeHTML(r.contact || '')}</option>`).join('');
+  _populateTaskEntityPickers();
 
-  if (isEdit) {
-    const t = tasks.find(x => x.id === id);
-    document.getElementById('taskTitle').value = t.title || '';
-    document.getElementById('taskType').value = t.type || 'todo';
-    document.getElementById('taskPriority').value = t.priority || 'med';
-    document.getElementById('taskDue').value = t.dueDate || '';
-    document.getElementById('taskOpp').value = t.opportunityId != null ? String(t.opportunityId) : '';
-    document.getElementById('taskNote').value = t.note || '';
-  } else {
-    document.getElementById('taskTitle').value = '';
-    document.getElementById('taskType').value = 'call';
-    document.getElementById('taskPriority').value = 'med';
-    document.getElementById('taskDue').value = todayISO();
-    document.getElementById('taskOpp').value = '';
-    document.getElementById('taskNote').value = '';
+  let t = isEdit ? tasks.find(x => x.id === id) : null;
+  const defaults = {
+    title: '', type: 'call', priority: 'med', dueDate: todayISO(),
+    mode: 'manual', subject: '', body: '', note: '',
+    entityType: 'opp', entityId: '',
+    assigneeId: null, assignedBy: _currentUserName(),
+  };
+  // Backfill entityType/entityId from legacy fields if missing
+  if (t && !t.entityType) {
+    if (t.opportunityId != null) { t.entityType = 'opp'; t.entityId = String(t.opportunityId); }
+    else if (t.contactKey)       { t.entityType = 'contact'; t.entityId = String(t.contactKey); }
+    else if (t.company)          { t.entityType = 'company'; t.entityId = String(t.company); }
+    else                         { t.entityType = 'none'; t.entityId = ''; }
   }
+  const v = isEdit ? { ...defaults, ...t, entityId: String(t.entityId || (t.opportunityId != null ? t.opportunityId : '')) } : defaults;
+
+  document.getElementById('taskTitle').value = v.title;
+  document.getElementById('taskType').value = v.type;
+  document.getElementById('taskPriority').value = v.priority;
+  document.getElementById('taskDue').value = v.dueDate || todayISO();
+  document.getElementById('taskNote').value = v.note;
+  document.getElementById('taskSubject').value = v.subject || '';
+  document.getElementById('taskBody').value = v.body || '';
+  // Assignee + "Assigned by" line
+  const assignSel = document.getElementById('taskAssignee');
+  if (assignSel) assignSel.value = v.assigneeId != null ? String(v.assigneeId) : '';
+  const abLine = document.getElementById('taskAssignedByLine');
+  const abName = document.getElementById('taskAssignedByName');
+  const abWhen = document.getElementById('taskAssignedByWhen');
+  if (abLine && abName) {
+    if (isEdit && v.assignedBy) {
+      const me = _currentUserName();
+      abName.textContent = v.assignedBy === me ? v.assignedBy + ' (toi)' : v.assignedBy;
+      if (abWhen) {
+        try {
+          const d = new Date(v.createdAt);
+          if (!isNaN(d.getTime())) abWhen.textContent = 'le ' + d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          else abWhen.textContent = '';
+        } catch { abWhen.textContent = ''; }
+      }
+      abLine.style.display = '';
+    } else {
+      abLine.style.display = 'none';
+    }
+  }
+
+  _switchTaskMode(v.mode);
+  // Pre-fill the three cross-tab selectors based on whatever the task carries
+  const oppPick = document.getElementById('taskOpp');
+  const contactPick = document.getElementById('taskContact');
+  const companyPick = document.getElementById('taskCompany');
+  if (oppPick) oppPick.value = (v.opportunityId != null ? String(v.opportunityId) : (v.entityType === 'opp' ? v.entityId : ''));
+  if (contactPick) contactPick.value = v.contactKey || (v.entityType === 'contact' ? v.entityId : '');
+  if (companyPick) companyPick.value = v.company || (v.entityType === 'company' ? v.entityId : '');
+  _onCascadeChange();
+  _switchEntityTab(v.entityType);
+  _toggleTaskMailFields(v.type);
+  _renderTaskTplMenu();
+
   document.getElementById('taskAlert').innerHTML = '';
   openModal('taskModal');
   setTimeout(() => {
     document.getElementById('taskTitle').focus();
-    const noteTA = document.getElementById('taskNote');
-    if (noteTA && typeof attachSlashTagPicker === 'function') attachSlashTagPicker(noteTA);
-    const titleIn = document.getElementById('taskTitle');
-    if (titleIn && typeof attachSlashTagPicker === 'function') attachSlashTagPicker(titleIn);
+    if (typeof attachSlashTagPicker === 'function') {
+      ['taskTitle','taskNote','taskSubject','taskBody'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) attachSlashTagPicker(el);
+      });
+    }
   }, 80);
 }
+
+/* Build the template dropdown for the task modal body */
+function _renderTaskTplMenu() {
+  const menu = document.getElementById('taskTplMenu');
+  if (!menu) return;
+  const tpls = (typeof EMAIL_TEMPLATES !== 'undefined' && Array.isArray(EMAIL_TEMPLATES)) ? EMAIL_TEMPLATES : [];
+  menu.innerHTML = tpls.length
+    ? tpls.map(t => `<div class="tpl-item" data-tpl-id="${escapeHTML(t.id)}">
+        <div>${escapeHTML(t.label)}</div>
+        <div class="tpl-sub">${escapeHTML(t.subject || '')}</div>
+      </div>`).join('')
+    : '<div style="padding:10px; font-size:12px; color:var(--text-muted)">Aucun template enregistré.</div>';
+}
+
+/* Wire entity tabs + cascade listeners + mode toggle + type-change + template picker (once at boot) */
+document.querySelectorAll('#entityPickTabs button').forEach(b => {
+  b.addEventListener('click', () => _switchEntityTab(b.dataset.entTab));
+});
+document.querySelectorAll('#taskModePick button').forEach(b => {
+  b.addEventListener('click', () => _switchTaskMode(b.dataset.mode));
+});
+document.getElementById('taskType')?.addEventListener('change', e => _toggleTaskMailFields(e.target.value));
+document.getElementById('taskOpp')?.addEventListener('change', _onCascadeChange);
+document.getElementById('taskContact')?.addEventListener('change', _onCascadeChange);
+document.getElementById('taskCompany')?.addEventListener('change', _onCascadeChange);
+
+/* Template picker open/close + insertion */
+(function wireTaskTplPicker() {
+  const picker = document.getElementById('taskTplPicker');
+  const btn    = document.getElementById('taskTplBtn');
+  const menu   = document.getElementById('taskTplMenu');
+  if (!picker || !btn || !menu) return;
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    picker.classList.toggle('open');
+  });
+  document.addEventListener('click', () => picker.classList.remove('open'));
+  menu.addEventListener('click', e => {
+    const item = e.target.closest('.tpl-item');
+    if (!item) return;
+    e.stopPropagation();
+    const tpl = (EMAIL_TEMPLATES || []).find(x => x.id === item.dataset.tplId);
+    if (!tpl) return;
+    const subjEl = document.getElementById('taskSubject');
+    const bodyEl = document.getElementById('taskBody');
+    if (subjEl && (!subjEl.value || confirm('Remplacer l\'objet actuel ?'))) subjEl.value = tpl.subject || '';
+    if (bodyEl) {
+      if (!bodyEl.value || confirm('Remplacer le corps actuel ?')) bodyEl.value = tpl.body || '';
+    }
+    picker.classList.remove('open');
+    // Re-attach slash picker on the freshly populated fields
+    if (typeof attachSlashTagPicker === 'function') {
+      if (subjEl) attachSlashTagPicker(subjEl);
+      if (bodyEl) attachSlashTagPicker(bodyEl);
+    }
+  });
+})();
 
 function saveTaskForm() {
   const title = document.getElementById('taskTitle').value.trim();
@@ -15323,13 +16655,48 @@ function saveTaskForm() {
     document.getElementById('taskAlert').innerHTML = '<div class="alert error">Le titre est requis.</div>';
     return;
   }
+  const type = document.getElementById('taskType').value;
+  const entityType = document.querySelector('#entityPickTabs button.active')?.dataset.entTab || 'opp';
+  const modeBtn = document.querySelector('#taskModePick button.active');
+  const mode = modeBtn ? modeBtn.dataset.mode : 'manual';
+  // Resolve entityId + legacy fields for backwards compat
+  let entityId = '';
+  let opportunityId = null;
+  let contactKey = null;
+  let contactName = null;
+  let companyName = null;
+  // Cross-tab cascade : read all 3 selectors; the active tab determines entityId
+  const oppVal = document.getElementById('taskOpp')?.value || '';
+  const contactVal = document.getElementById('taskContact')?.value || '';
+  const companyVal = document.getElementById('taskCompany')?.value || '';
+  if (oppVal) {
+    opportunityId = parseInt(oppVal, 10);
+    const opp = rawRows.find(r => r.id === opportunityId);
+    if (opp) { contactName = opp.contact; companyName = opp.company; }
+  }
+  if (contactVal && typeof buildContacts === 'function') {
+    const c = buildContacts().find(x => x.key === contactVal);
+    if (c) { contactKey = contactVal; contactName = contactName || c.name; companyName = companyName || c.company; }
+  }
+  if (companyVal) { companyName = companyName || companyVal; }
+  // entityId reflects the primary tab the user chose
+  if (entityType === 'opp')     entityId = oppVal;
+  else if (entityType === 'contact') entityId = contactVal;
+  else if (entityType === 'company') entityId = companyVal;
+  // Assignment
+  const assigneeVal = document.getElementById('taskAssignee')?.value || '';
+  const assigneeId = assigneeVal ? parseInt(assigneeVal, 10) : null;
   const data = {
     title,
-    type: document.getElementById('taskType').value,
-    priority: document.getElementById('taskPriority').value,
+    type, priority: document.getElementById('taskPriority').value,
     dueDate: document.getElementById('taskDue').value || null,
-    opportunityId: document.getElementById('taskOpp').value ? parseInt(document.getElementById('taskOpp').value, 10) : null,
+    entityType, entityId,
+    opportunityId, contactKey, contactName, company: companyName,
     note: document.getElementById('taskNote').value.trim(),
+    subject: document.getElementById('taskSubject').value.trim(),
+    body: document.getElementById('taskBody').value.trim(),
+    mode,
+    assigneeId,
   };
   if (editingTaskId) {
     const t = tasks.find(x => x.id === editingTaskId);
@@ -15338,6 +16705,7 @@ function saveTaskForm() {
     tasks.push({
       id: Date.now() + Math.floor(Math.random() * 1000),
       ...data,
+      assignedBy: _currentUserName(),
       status: 'open',
       createdAt: new Date().toISOString(),
       completedAt: null,
@@ -15676,6 +17044,591 @@ document.getElementById('taskViewToggle').addEventListener('click', e => {
 
 document.getElementById('taskAddBtn').addEventListener('click', () => openTaskModal(null));
 document.getElementById('fab').addEventListener('click', () => openTaskModal(null));
+
+/* ============================================================
+ *  TASK RUNNER — enchaîne les tâches de la vue courante
+ * ============================================================ */
+let taskRunQueue = [];
+let taskRunIdx = 0;
+
+/* Cadence active / paused state — default active when undefined */
+function _isCadenceActive(cad) {
+  if (!cad) return true;
+  return cad.active !== false;
+}
+function _toggleCadenceActive(cadId) {
+  const cad = cadences.find(c => c.id === cadId);
+  if (!cad) return;
+  cad.active = _isCadenceActive(cad) ? false : true;
+  try { if (typeof saveCadences === 'function') saveCadences(); } catch {}
+  if (typeof toast === 'function') toast(cad.active ? `Séquence « ${cad.name} » réactivée` : `Séquence « ${cad.name} » mise en pause`);
+}
+
+/* Overdue detection — a non-done task whose dueDate is before today */
+function _isOverdue(t) {
+  if (!t || t.status === 'done' || !t.dueDate) return false;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const d = new Date(t.dueDate + 'T00:00:00');
+  if (isNaN(d.getTime())) return false;
+  return d.getTime() < today.getTime();
+}
+
+/* Per-sequence runner — open with only the tasks of one cadence */
+function openTaskRunnerForCadence(cadId) {
+  const pool = tasks.slice()
+    .filter(t => t.cadenceId === cadId && t.status !== 'done')
+    .filter(t => !activeTaskType || t.type === activeTaskType)
+    .sort((a, b) => {
+      const prioMap = { high: 0, med: 1, low: 2 };
+      const pa = prioMap[a.priority] ?? 1, pb = prioMap[b.priority] ?? 1;
+      if (pa !== pb) return pa - pb;
+      return (a.dueDate || '9999').localeCompare(b.dueDate || '9999');
+    });
+  if (!pool.length) { toast('Aucune tâche à exécuter dans cette séquence'); return; }
+  // Reuse the standard runner UI but pre-fill the queue/state
+  _runnerOverridePool = pool;
+  openTaskRunner();
+  _runnerOverridePool = null;
+}
+let _runnerOverridePool = null;
+
+function _currentVisibleTaskPool() {
+  // If a per-sequence runner override is set, use it as-is
+  if (_runnerOverridePool && Array.isArray(_runnerOverridePool)) return _runnerOverridePool.slice();
+  // Resolve which tasks are currently visible in the user's view
+  let pool = tasks.slice().filter(t => t.status !== 'done');
+  // Skip tasks attached to paused cadences
+  if (typeof cadences !== 'undefined' && cadences.length) {
+    const pausedIds = new Set(cadences.filter(c => !_isCadenceActive(c)).map(c => c.id));
+    if (pausedIds.size) pool = pool.filter(t => !t.cadenceId || !pausedIds.has(t.cadenceId));
+  }
+  // Channel filter (call/mail/...) si actif
+  if (typeof activeTaskType !== 'undefined' && activeTaskType) {
+    pool = pool.filter(t => t.type === activeTaskType);
+  }
+  // Bucket courant : aujourd'hui par défaut. Si l'utilisateur a un autre tab actif, le respecter
+  const tab = typeof currentTaskTab !== 'undefined' ? currentTaskTab : 'today';
+  if (tab && tab !== 'all') {
+    pool = pool.filter(t => dueBucket(t) === tab);
+  }
+  // Tri : priorité puis échéance
+  const prioMap = { high: 0, med: 1, low: 2 };
+  pool.sort((a, b) => {
+    const pa = prioMap[a.priority] ?? 1, pb = prioMap[b.priority] ?? 1;
+    if (pa !== pb) return pa - pb;
+    return (a.dueDate || '9999').localeCompare(b.dueDate || '9999');
+  });
+  return pool;
+}
+
+function refreshRunBtnCount() {
+  const cnt = document.getElementById('taskRunCount');
+  if (!cnt) return;
+  const pool = _currentVisibleTaskPool();
+  cnt.textContent = pool.length;
+  const btn = document.getElementById('taskRunStartBtn');
+  if (btn) btn.style.display = pool.length > 0 ? '' : 'none';
+}
+
+let _runnerStep = 'select'; // 'select' | 'running'
+let _runnerSelected = new Set(); // task ids currently checked in the selection step
+let _runnerSelFilter = 'all'; // 'all' | 'mail' | 'call' | channel filter inside selection
+
+function openTaskRunner() {
+  const pool = _currentVisibleTaskPool();
+  if (!pool.length) { toast('Aucune tâche à exécuter dans cette vue'); return; }
+  taskRunQueue = [];
+  taskRunIdx = 0;
+  _runnerStep = 'select';
+  _runnerSelected = new Set(pool.map(t => t.id));
+  _runnerSelFilter = 'all';
+
+  // Backdrop on demand
+  let bd = document.getElementById('taskRunnerBd');
+  if (!bd) {
+    bd = document.createElement('div');
+    bd.className = 'runner-backdrop';
+    bd.id = 'taskRunnerBd';
+    bd.innerHTML = `
+      <div class="runner-modal">
+        <div class="runner-head">
+          <h2 id="runnerTitle">Démarrer les tâches</h2>
+          <span class="runner-prog" id="runnerProg">—</span>
+          <button class="runner-close" id="runnerCloseBtn" type="button" title="Fermer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="runner-body" id="runnerBody"></div>
+        <div class="runner-foot" id="runnerFoot">
+          <button class="skip" id="runnerSkip" type="button">Passer cette tâche →</button>
+          <button class="primary" id="runnerDone" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Marquer terminé · suivant
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(bd);
+    document.getElementById('runnerCloseBtn').addEventListener('click', closeTaskRunner);
+    bd.addEventListener('click', e => { if (e.target === bd) closeTaskRunner(); });
+  }
+  requestAnimationFrame(() => bd.classList.add('show'));
+  renderRunnerSelector();
+}
+
+function renderRunnerSelector() {
+  _runnerStep = 'select';
+  const body = document.getElementById('runnerBody');
+  const foot = document.getElementById('runnerFoot');
+  const ttl = document.getElementById('runnerTitle');
+  const prog = document.getElementById('runnerProg');
+  if (!body || !foot) return;
+  const pool = _currentVisibleTaskPool();
+  const visible = (_runnerSelFilter === 'all') ? pool : pool.filter(t => t.type === _runnerSelFilter);
+  if (ttl) ttl.textContent = 'Quelles tâches lancer ?';
+  if (prog) prog.textContent = `${_runnerSelected.size} / ${pool.length} sélectionnées`;
+
+  // Compute per-channel counts for chips
+  const counts = { all: pool.length };
+  pool.forEach(t => { counts[t.type] = (counts[t.type] || 0) + 1; });
+  const chips = [
+    { k: 'all',      l: 'Toutes' },
+    { k: 'call',     l: 'Appels' },
+    { k: 'mail',     l: 'Emails' },
+    { k: 'linkedin', l: 'LinkedIn' },
+    { k: 'whatsapp', l: 'WhatsApp' },
+    { k: 'sms',      l: 'SMS' },
+    { k: 'meet',     l: 'RDV' },
+    { k: 'note',     l: 'Notes' },
+    { k: 'todo',     l: 'À faire' },
+  ].filter(c => c.k === 'all' || counts[c.k]);
+
+  body.innerHTML = `
+    <div class="runner-select-actions">
+      ${chips.map(c => `<button class="rs-chip ${_runnerSelFilter === c.k ? 'active' : ''}" data-rs-filter="${c.k}" type="button">${escapeHTML(c.l)} <span style="opacity:0.6">·${counts[c.k] || 0}</span></button>`).join('')}
+      <div class="rs-sep"></div>
+      <button class="rs-chip" data-rs-action="all" type="button">Tout cocher</button>
+      <button class="rs-chip" data-rs-action="none" type="button">Tout décocher</button>
+    </div>
+    <div class="runner-select-list" id="runnerSelectList">
+      ${visible.length ? visible.map(t => {
+        const ent = _taskEntityDisplay(t);
+        const due = (typeof dueLabel === 'function') ? dueLabel(t) : { text: '', cls: '' };
+        const ci = _taskCadenceInfo(t);
+        const isSel = _runnerSelected.has(t.id);
+        return `<div class="runner-select-row ${isSel ? 'selected' : ''}" data-rs-id="${t.id}">
+          <span class="rs-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span class="rs-icon">${TASK_TYPE_ICON[t.type || 'todo'] || ''}</span>
+          <div class="rs-body">
+            <div class="rs-title">${escapeHTML(t.title)}</div>
+            <div class="rs-meta">
+              <span class="task-due ${due.cls}">${escapeHTML(due.text)}</span>
+              ${ent.label ? `<span class="task-entity-pill"><span class="ent-kind">${ent.kind === 'contact' ? 'C' : ent.kind === 'company' ? 'E' : 'O'}</span><span>${escapeHTML(ent.label)}</span></span>` : ''}
+              ${ci ? `<span class="task-cad-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>${escapeHTML(ci.cadenceName)}</span>` : ''}
+              <span class="task-mode-chip ${t.mode || 'manual'}">${t.mode === 'auto' ? 'Auto' : t.mode === 'semi' ? 'Semi-auto' : 'Manuel'}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('') : '<div class="runner-select-empty">Aucune tâche pour ce filtre.</div>'}
+    </div>
+  `;
+
+  // Footer: replace by "Démarrer N" / Annuler
+  foot.innerHTML = `
+    <span class="sel-count"><strong id="runnerSelCount">${_runnerSelected.size}</strong> tâche${_runnerSelected.size > 1 ? 's' : ''} sélectionnée${_runnerSelected.size > 1 ? 's' : ''}</span>
+    <button class="skip" id="runnerCancelSel" type="button">Annuler</button>
+    <button class="primary" id="runnerStartSel" type="button">
+      <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+      Démarrer
+    </button>
+  `;
+
+  // Wire filter chips
+  body.querySelectorAll('[data-rs-filter]').forEach(b => {
+    b.addEventListener('click', () => { _runnerSelFilter = b.dataset.rsFilter; renderRunnerSelector(); });
+  });
+  // Wire bulk actions
+  body.querySelectorAll('[data-rs-action]').forEach(b => {
+    b.addEventListener('click', () => {
+      const act = b.dataset.rsAction;
+      const scope = (_runnerSelFilter === 'all') ? pool : pool.filter(t => t.type === _runnerSelFilter);
+      if (act === 'all') scope.forEach(t => _runnerSelected.add(t.id));
+      if (act === 'none') scope.forEach(t => _runnerSelected.delete(t.id));
+      if (act === 'invert') scope.forEach(t => { if (_runnerSelected.has(t.id)) _runnerSelected.delete(t.id); else _runnerSelected.add(t.id); });
+      renderRunnerSelector();
+    });
+  });
+  // Wire per-row toggle
+  body.querySelectorAll('.runner-select-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = parseInt(row.dataset.rsId, 10);
+      if (_runnerSelected.has(id)) _runnerSelected.delete(id);
+      else _runnerSelected.add(id);
+      row.classList.toggle('selected');
+      const cnt = document.getElementById('runnerSelCount');
+      if (cnt) cnt.textContent = _runnerSelected.size;
+      if (prog) prog.textContent = `${_runnerSelected.size} / ${pool.length} sélectionnées`;
+    });
+  });
+  // Wire footer
+  document.getElementById('runnerCancelSel').addEventListener('click', closeTaskRunner);
+  document.getElementById('runnerStartSel').addEventListener('click', () => {
+    if (!_runnerSelected.size) { toast('Sélectionne au moins une tâche'); return; }
+    // Build queue in the same order as the visible pool (priority + due)
+    taskRunQueue = pool.filter(t => _runnerSelected.has(t.id)).map(t => t.id);
+    taskRunIdx = 0;
+    _runnerStep = 'running';
+    _restoreRunnerFooterRunning();
+    renderRunnerCurrent();
+  });
+}
+
+function _restoreRunnerFooterRunning() {
+  const foot = document.getElementById('runnerFoot');
+  if (!foot) return;
+  foot.innerHTML = `
+    <button class="skip" id="runnerSkip" type="button">Passer cette tâche →</button>
+    <button class="primary" id="runnerDone" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Marquer terminé · suivant
+    </button>
+  `;
+  document.getElementById('runnerSkip').addEventListener('click', () => skipRunnerCurrent());
+  document.getElementById('runnerDone').addEventListener('click', () => completeRunnerCurrent());
+}
+
+function closeTaskRunner() {
+  const bd = document.getElementById('taskRunnerBd');
+  if (bd) { bd.classList.remove('show'); setTimeout(() => bd.parentNode && bd.remove(), 200); }
+  taskRunQueue = []; taskRunIdx = 0;
+  renderTasks();
+  refreshRunBtnCount();
+}
+
+let _runnerEmailView = 'edit'; // 'edit' | 'preview' — per current task
+
+/* Insert text at the cursor of the active email field (subject or body) */
+function _insertIntoActiveEmailField(text) {
+  const body = document.getElementById('runnerBody2');
+  const subj = document.getElementById('runnerSubject');
+  const el = (document.activeElement === subj) ? subj : body;
+  if (!el) return;
+  const start = el.selectionStart ?? el.value.length;
+  const end   = el.selectionEnd   ?? el.value.length;
+  el.value = el.value.slice(0, start) + text + el.value.slice(end);
+  el.selectionStart = el.selectionEnd = start + text.length;
+  el.focus();
+}
+
+/* Signature editor — small modal that saves to localStorage (LS_KEYS.userSig) */
+function openSignatureEditor() {
+  let bd = document.getElementById('sigBackdrop');
+  if (!bd) {
+    bd = document.createElement('div');
+    bd.id = 'sigBackdrop';
+    bd.className = 'sig-backdrop';
+    bd.innerHTML = `
+      <div class="sig-modal" role="dialog" aria-modal="true" aria-label="Ma signature">
+        <div class="sig-head">
+          <h3>Ma signature email</h3>
+          <button class="sig-close" type="button" id="sigCloseBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="sig-body">
+          <label for="sigText">Texte de la signature</label>
+          <textarea id="sigText" placeholder="— Michael
+Sales Manager · Catch Up
++32 123 45 67 89
+michael@catch-up.io"></textarea>
+          <div class="sig-hint">Enregistrée localement et insérable en un clic dans tous les emails du runner.</div>
+        </div>
+        <div class="sig-foot">
+          <button type="button" id="sigCancel">Annuler</button>
+          <button type="button" class="primary" id="sigSave">Enregistrer</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(bd);
+    document.getElementById('sigCloseBtn').addEventListener('click', () => bd.classList.remove('show'));
+    document.getElementById('sigCancel').addEventListener('click', () => bd.classList.remove('show'));
+    document.getElementById('sigSave').addEventListener('click', () => {
+      const v = document.getElementById('sigText').value.trim();
+      if (typeof setStored === 'function') setStored(LS_KEYS.userSig, v || null);
+      else { try { v ? localStorage.setItem(LS_KEYS.userSig, v) : localStorage.removeItem(LS_KEYS.userSig); } catch {} }
+      bd.classList.remove('show');
+      if (typeof toast === 'function') toast('Signature enregistrée');
+    });
+    bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('show'); });
+  }
+  const cur = (typeof getStored === 'function' && getStored(LS_KEYS.userSig)) || '';
+  document.getElementById('sigText').value = cur;
+  bd.classList.add('show');
+  setTimeout(() => document.getElementById('sigText').focus(), 60);
+}
+
+function renderRunnerCurrent() {
+  const body = document.getElementById('runnerBody');
+  const prog = document.getElementById('runnerProg');
+  const ttl = document.getElementById('runnerTitle');
+  if (!body) return;
+  if (taskRunIdx >= taskRunQueue.length) {
+    body.innerHTML = '<div style="text-align:center; padding:48px 24px; color:var(--text-muted);"><div style="font-size:34px; margin-bottom:8px;">✓</div><div style="font-size:14px; font-weight:600; color:var(--text);">Toutes les tâches sont traitées.</div><div style="font-size:12.5px; margin-top:4px;">Tu peux fermer la fenêtre.</div></div>';
+    prog.textContent = `${taskRunQueue.length} / ${taskRunQueue.length}`;
+    if (ttl) ttl.textContent = 'Terminé !';
+    document.getElementById('runnerSkip').style.display = 'none';
+    document.getElementById('runnerDone').textContent = 'Fermer';
+    document.getElementById('runnerDone').onclick = closeTaskRunner;
+    return;
+  }
+  const tid = taskRunQueue[taskRunIdx];
+  const t = tasks.find(x => x.id === tid);
+  if (!t) { taskRunIdx++; return renderRunnerCurrent(); }
+  const opp = t.opportunityId != null ? rawRows.find(r => r.id === t.opportunityId) : null;
+  const ctx = opp || { contact: t.contactName, company: t.company };
+  const ent = _taskEntityDisplay(t);
+  const ci = _taskCadenceInfo(t);
+  const cp = _taskCampaignInfo(t);
+  prog.textContent = `${taskRunIdx + 1} / ${taskRunQueue.length}`;
+  if (ttl) ttl.textContent = (TASK_TYPE_LABEL[t.type] || 'Tâche') + ' à exécuter';
+  const isEmailLike = EMAIL_LIKE_TYPES.has(t.type);
+  const subjResolved = typeof resolveDynamicTags === 'function' ? resolveDynamicTags(t.subject || '', ctx) : (t.subject || '');
+  const bodyResolved = typeof resolveDynamicTags === 'function' ? resolveDynamicTags(t.body || t.note || '', ctx) : (t.body || t.note || '');
+  _runnerEmailView = 'edit'; // reset for each new task
+  const tplsHtml = (typeof EMAIL_TEMPLATES !== 'undefined' && Array.isArray(EMAIL_TEMPLATES) && EMAIL_TEMPLATES.length)
+    ? EMAIL_TEMPLATES.map(tp => `<div class="tpl-item" data-tpl-id="${escapeHTML(tp.id)}"><div>${escapeHTML(tp.label)}</div><div class="tpl-sub">${escapeHTML(tp.subject || '')}</div></div>`).join('')
+    : '<div style="padding:10px; font-size:12px; color:var(--text-muted)">Aucun template enregistré.</div>';
+
+  body.innerHTML = `
+    <div class="runner-task-title">${escapeHTML(t.title)}</div>
+    <div class="runner-task-sub">
+      ${ent.label ? `<span class="task-entity-pill"><span class="ent-kind">${ent.kind === 'contact' ? 'C' : ent.kind === 'company' ? 'E' : 'O'}</span><span>${escapeHTML(ent.label)}</span></span>` : ''}
+      <span class="task-mode-chip ${t.mode || 'manual'}">${t.mode === 'auto' ? 'Auto' : t.mode === 'semi' ? 'Semi-auto' : 'Manuel'}</span>
+      ${t.dueDate ? `<span style="font-size:11.5px;">Échéance ${escapeHTML(t.dueDate)}</span>` : ''}
+    </div>
+
+    ${(() => {
+      const a = _taskAssigneeDisplay(t);
+      const by = _taskAssignedByDisplay(t);
+      const parts = [];
+      parts.push(`<div class="rc-item"><span class="rc-lbl">Assigné à</span> <span class="rc-val">${escapeHTML(a.name)}</span></div>`);
+      if (by && !by.isMe) parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Par</span> <span class="rc-val">${escapeHTML(by.name)}</span></div>`);
+      if (ci) {
+        parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Séquence</span> <span class="rc-val">${escapeHTML(ci.cadenceName)}</span></div>`);
+        parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Étape</span> <span class="rc-val">${ci.step || ci.progressDone + 1}${ci.totalSteps ? ' / ' + ci.totalSteps : (ci.progressTotal ? ' / ' + ci.progressTotal : '')}</span></div>`);
+        if (ci.progressDone || ci.progressTotal) parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Progression</span> <span class="rc-val">${ci.progressDone}/${ci.progressTotal} ✓</span></div>`);
+      }
+      if (cp) {
+        parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Campagne</span> <span class="rc-val">${escapeHTML(cp.campaignName)}</span></div>`);
+        if (cp.step) parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Étape</span> <span class="rc-val">${escapeHTML(String(cp.step))}</span></div>`);
+      }
+      if (!ci && !cp) {
+        if (ent.phone) parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Tél</span> <span class="rc-val">${escapeHTML(ent.phone)}</span></div>`);
+        if (ent.email) parts.push(`<div class="rc-divider"></div><div class="rc-item"><span class="rc-lbl">Email</span> <span class="rc-val">${escapeHTML(ent.email)}</span></div>`);
+      }
+      return `<div class="runner-context">${parts.join('')}</div>`;
+    })()}
+
+    ${t.type === 'call' && ent.phone ? `<div class="runner-section"><div class="lbl">Numéro</div><a href="tel:${escapeHTML(ent.phone)}" style="font-size:18px; font-weight:700; color:var(--text); text-decoration:none;">${escapeHTML(ent.phone)}</a><div style="font-size:11.5px; color:var(--text-muted); margin-top:4px;">Clique pour appeler depuis ton téléphone.</div></div>` : ''}
+
+    ${isEmailLike ? `
+      <div class="runner-section sp-mail">
+        <div class="lbl-row">
+          <div class="lbl">Aperçu ${t.type === 'mail' ? "de l'email" : 'du message'} <span style="font-weight:500; text-transform:none; letter-spacing:0; font-size:10.5px; color:var(--text-faint);">— éditable en direct</span></div>
+          <span class="tpl-picker" id="runnerTplPicker">
+            <button type="button" class="tpl-picker-btn" id="runnerTplBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Template
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="tpl-picker-menu" id="runnerTplMenu">${tplsHtml}</div>
+          </span>
+        </div>
+        <div class="runner-email-preview editable">
+          <div class="rep-line"><span class="rep-lbl">De</span><span class="rep-val">${escapeHTML((typeof getStored === 'function' && getStored(LS_KEYS.userName)) || 'Moi')}</span></div>
+          <div class="rep-line"><span class="rep-lbl">À</span>
+            <span class="rep-pills">
+              ${ent.contact ? `<span class="rp-pill" title="Contact"><span class="rp-av" style="background:${ent.kind === 'company' ? '#1a1a1f' : '#2f4dcb'}">${escapeHTML((ent.initials || (ent.contact || '?')[0]).toUpperCase())}</span>${escapeHTML(ent.contact)}</span>` : ''}
+              ${ent.email ? `<span class="rp-pill email" title="Adresse email">${escapeHTML(ent.email)}</span>` : ''}
+              ${!ent.contact && !ent.email ? '<span class="rep-val">—</span>' : ''}
+            </span>
+          </div>
+          ${t.type === 'mail' ? `<input type="text" id="runnerSubject" class="rep-subject-input" placeholder="Objet" value="${escapeHTML(subjResolved)}">` : ''}
+          <div class="runner-mail-toolbar" id="runnerMailToolbar">
+            <span class="mtb-dd" id="runnerTagDd">
+              <button type="button" class="mtb-btn" id="runnerTagBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg>
+                Insérer un tag
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="mtb-dd-menu" id="runnerTagMenu">
+                ${(typeof DYNAMIC_TAGS !== 'undefined' ? DYNAMIC_TAGS : []).map(tg => `<div class="mtb-item" data-tag="${escapeHTML(tg.key)}"><code>{{${escapeHTML(tg.key)}}}</code><span>${escapeHTML(tg.label)}</span></div>`).join('')}
+              </div>
+            </span>
+            <span class="mtb-divider"></span>
+            <button type="button" class="mtb-btn" id="runnerSigBtn" title="Insérer ta signature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l3-3 4 4 7-7 4 4"/><path d="M3 21h18"/></svg>
+              Insérer ma signature
+            </button>
+            <button type="button" class="mtb-btn" id="runnerSigEditBtn" title="Configurer ma signature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Configurer
+            </button>
+          </div>
+          <textarea id="runnerBody2" class="rep-body-input" placeholder="Tape ton message — / pour les tags dynamiques">${escapeHTML(bodyResolved)}</textarea>
+        </div>
+      </div>
+    ` : ''}
+
+    ${t.note ? `<div class="runner-section"><div class="lbl">Commentaire / Contexte</div><div style="font-size:12.5px; color:var(--text); line-height:1.55; white-space:pre-wrap;">${escapeHTML(t.note)}</div></div>` : ''}
+
+    ${!isEmailLike ? `
+      <div class="runner-live-note">
+        <div class="lbl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Prise de notes en direct
+        </div>
+        <textarea id="runnerLiveNote" placeholder="Note ce qui se passe : réponse client, prochaines étapes, objections…">${escapeHTML(t.runnerNote || '')}</textarea>
+      </div>
+    ` : ''}
+  `;
+
+  // Tag picker on the email fields (the editable preview)
+  const subj = document.getElementById('runnerSubject');
+  const body2 = document.getElementById('runnerBody2');
+  if (subj && typeof attachSlashTagPicker === 'function') attachSlashTagPicker(subj);
+  if (body2 && typeof attachSlashTagPicker === 'function') attachSlashTagPicker(body2);
+
+  // In-app toolbar : tag picker dropdown
+  const tagDd = document.getElementById('runnerTagDd');
+  const tagBtn = document.getElementById('runnerTagBtn');
+  const tagMenu = document.getElementById('runnerTagMenu');
+  if (tagDd && tagBtn && tagMenu) {
+    tagBtn.addEventListener('click', e => { e.stopPropagation(); tagDd.classList.toggle('open'); });
+    document.addEventListener('click', () => tagDd.classList.remove('open'), { once: true });
+    tagMenu.addEventListener('click', e => {
+      const item = e.target.closest('.mtb-item');
+      if (!item) return;
+      e.stopPropagation();
+      _insertIntoActiveEmailField(`{{${item.dataset.tag}}}`);
+      tagDd.classList.remove('open');
+    });
+  }
+  // Insert signature
+  document.getElementById('runnerSigBtn')?.addEventListener('click', () => {
+    const sig = (typeof getStored === 'function' && getStored(LS_KEYS.userSig)) || '';
+    if (!sig.trim()) { openSignatureEditor(); return; }
+    if (body2) {
+      const sep = (body2.value && !body2.value.endsWith('\n\n')) ? '\n\n' : '';
+      body2.value = body2.value + sep + sig;
+      body2.focus();
+    }
+  });
+  // Configure signature
+  document.getElementById('runnerSigEditBtn')?.addEventListener('click', openSignatureEditor);
+
+  // Template picker open/close + insertion (runner)
+  const rp = document.getElementById('runnerTplPicker');
+  const rb = document.getElementById('runnerTplBtn');
+  const rm = document.getElementById('runnerTplMenu');
+  if (rp && rb && rm) {
+    rb.addEventListener('click', e => { e.stopPropagation(); rp.classList.toggle('open'); });
+    document.addEventListener('click', () => rp.classList.remove('open'), { once: true });
+    rm.addEventListener('click', e => {
+      const item = e.target.closest('.tpl-item');
+      if (!item) return;
+      e.stopPropagation();
+      const tpl = (EMAIL_TEMPLATES || []).find(x => x.id === item.dataset.tplId);
+      if (!tpl) return;
+      const resolved = (s) => typeof resolveDynamicTags === 'function' ? resolveDynamicTags(s, ctx) : s;
+      if (subj) subj.value = resolved(tpl.subject || '');
+      if (body2) body2.value = resolved(tpl.body || '');
+      rp.classList.remove('open');
+    });
+  }
+
+  // Wire actions buttons
+  const skip = document.getElementById('runnerSkip');
+  if (skip) skip.style.display = '';
+  const done = document.getElementById('runnerDone');
+  if (done) {
+    done.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      + (isEmailLike ? ' Envoyer · suivant' : ' Marquer terminé · suivant');
+    done.onclick = completeRunnerCurrent;
+  }
+  // Auto mode → send right away (semi-auto pauses for review)
+  if (t.mode === 'auto' && isEmailLike) {
+    // Small delay to let the user see what is being sent
+    setTimeout(() => completeRunnerCurrent(), 800);
+  }
+}
+
+function _persistRunnerLiveNote(t) {
+  const noteEl = document.getElementById('runnerLiveNote');
+  if (!noteEl) return null;
+  const v = noteEl.value.trim();
+  if (!v) return null;
+  t.runnerNote = v;
+  // Append to the persistent note as a timestamped entry
+  const stamp = new Date().toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+  const prefix = t.note ? (t.note + '\n\n— ' + stamp + ' —\n') : '';
+  t.note = prefix + v;
+  return v;
+}
+
+function completeRunnerCurrent() {
+  const tid = taskRunQueue[taskRunIdx];
+  const t = tasks.find(x => x.id === tid);
+  if (!t) { taskRunIdx++; return renderRunnerCurrent(); }
+  const opp = t.opportunityId != null ? rawRows.find(r => r.id === t.opportunityId) : null;
+  const isEmailLike = EMAIL_LIKE_TYPES.has(t.type);
+  const liveNote = _persistRunnerLiveNote(t);
+  // Log a comment on the linked opportunity if any
+  if (opp && Array.isArray(opp.comments)) {
+    const finalSubject = document.getElementById('runnerSubject')?.value || t.subject || '';
+    const finalBody    = document.getElementById('runnerBody2')?.value || t.body || '';
+    let summary = '';
+    if (isEmailLike) {
+      summary = t.type === 'mail'
+        ? `Email envoyé à ${(opp.contactEmail || '?')} — « ${finalSubject} »\n\n${finalBody}`
+        : `Message ${TASK_TYPE_LABEL[t.type] || t.type} envoyé\n\n${finalBody}`;
+    } else if (t.type === 'call') {
+      summary = `Appel effectué${ent => ent && ent.phone ? ' (' + ent.phone + ')' : ''}` + (liveNote ? '\n\n' + liveNote : '');
+    } else {
+      summary = `${TASK_TYPE_LABEL[t.type] || 'Tâche'} terminée : ${t.title}` + (liveNote ? '\n\n' + liveNote : '');
+    }
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    opp.comments.unshift({
+      id: Date.now(), parent_id: null,
+      date: `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+      by: (typeof getStored === 'function' && getStored(LS_KEYS.userName)) || 'Moi',
+      type_id: t.type === 'mail' ? 1 : (t.type === 'call' ? 2 : 3),
+      striped_comment: summary, comment: summary,
+      entity: 'opportunity',
+    });
+    try { localStorage.setItem(LS_KEYS.data, JSON.stringify(rawRows)); } catch {}
+  }
+  t.status = 'done';
+  t.completedAt = new Date().toISOString();
+  saveTasks();
+  taskRunIdx++;
+  renderRunnerCurrent();
+}
+
+/* Skip persists the live note before moving on, so user input isn't lost */
+function skipRunnerCurrent() {
+  const tid = taskRunQueue[taskRunIdx];
+  const t = tasks.find(x => x.id === tid);
+  if (t) { _persistRunnerLiveNote(t); saveTasks(); }
+  taskRunIdx++;
+  renderRunnerCurrent();
+}
+
+document.getElementById('taskRunStartBtn').addEventListener('click', openTaskRunner);
+// Keep the count fresh whenever tasks list re-renders
+const _origRenderTasks_runner = renderTasks;
+window.renderTasks = function() { _origRenderTasks_runner(); refreshRunBtnCount(); };
 document.getElementById('taskSaveBtn').addEventListener('click', saveTaskForm);
 document.getElementById('taskDeleteBtn').addEventListener('click', deleteTask);
 document.querySelectorAll('.task-tab').forEach(t => {
@@ -16815,6 +18768,8 @@ function ensureCadenceBar() {
   tabs.parentNode.insertBefore(bar, tabs);
   document.getElementById('cadMgrOpenBtn').addEventListener('click', openCadenceManager);
   document.getElementById('cadApplyOpenBtn').addEventListener('click', () => openApplyCadenceModal([], cadences[0]?.id));
+  // Respect the current group mode on first inject : hidden unless we're in sequence view
+  if (typeof taskGroupMode !== 'undefined' && taskGroupMode !== 'sequence') bar.style.display = 'none';
 }
 
 // Hook the cadence bar via showPage
@@ -18068,6 +20023,7 @@ window.renderCompanies = function() { _origRenderCompanies(); renderBulkBar('com
  *  TASKS — Omnichannel filters + grouping by sequence
  * ============================================================ */
 let taskGroupMode = 'flat';     // 'flat' | 'sequence'
+let _seqViewInitialized = false; // pre-collapse all groups the first time we land on the sequence view
 let taskKindFilter = 'all';     // cadence kind: 'all' | 'outbound' | ...
 const collapsedSeqGroups = new Set();
 
@@ -18129,21 +20085,39 @@ function renderTasksBySequence() {
     const cb = cadences.find(x => x.id === b)?.name || '';
     return ca.localeCompare(cb, 'fr');
   });
+  // First time landing on this view → pre-collapse every group
+  if (!_seqViewInitialized) {
+    orderedCadIds.forEach(id => collapsedSeqGroups.add(id));
+    _seqViewInitialized = true;
+  }
   list.innerHTML = '';
   if (!orderedCadIds.length && !outOfSequence.length) {
     list.innerHTML = '<div class="cc-empty" style="margin-top:14px;">Aucune tâche enrôlée dans une séquence pour ce filtre.</div>';
     return;
   }
+  // Hide the global channel filter bar when grouped by sequence
+  const globalCh = document.getElementById('channelFilters');
+  if (globalCh) globalCh.style.display = 'none';
+
+  const channelOrder = ['call','mail','meet','linkedin','whatsapp','sms','note','todo'];
+
   orderedCadIds.forEach(cadId => {
     const cad = cadences.find(c => c.id === cadId);
-    const items = byCad.get(cadId).slice().sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'));
-    const total = items.length;
-    const done = items.filter(t => t.status === 'done').length;
+    // Compute per-cadence channel counts (open + done across all)
+    const cadAll = byCad.get(cadId);
+    const cadCounts = channelOrder.reduce((m, c) => { m[c] = cadAll.filter(t => t.type === c).length; return m; }, {});
+    // Filter cadAll for display by activeTaskType
+    const items = (activeTaskType ? cadAll.filter(t => t.type === activeTaskType) : cadAll).slice()
+      .sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'));
+    const total = cadAll.length;
+    const done = cadAll.filter(t => t.status === 'done').length;
     const pct = total ? Math.round((done/total)*100) : 0;
+    const overdue = cadAll.filter(t => t.status !== 'done' && _isOverdue(t)).length;
     const kind = cad ? (CADENCE_KIND[cad.kind] || CADENCE_KIND.custom) : CADENCE_KIND.custom;
     const isCollapsed = collapsedSeqGroups.has(cadId);
+    const isActive = _isCadenceActive(cad);
     const group = document.createElement('div');
-    group.className = 'seq-group' + (isCollapsed ? ' collapsed' : '');
+    group.className = 'seq-group' + (isCollapsed ? ' collapsed' : '') + (isActive ? '' : ' paused');
     group.dataset.cadId = cadId;
     group.innerHTML = `
       <div class="seq-group-head">
@@ -18154,11 +20128,44 @@ function renderTasksBySequence() {
           <span><strong>${done}</strong>/${total}</span>
           <span class="sg-progress"><span style="width:${pct}%"></span></span>
         </span>
+        <span class="seq-head-icons">
+          ${overdue ? `<span class="seq-overdue-badge" title="${overdue} tâche${overdue > 1 ? 's' : ''} en retard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${overdue}
+          </span>` : ''}
+          <span class="seq-types-row">
+            ${channelOrder.filter(c => cadCounts[c] > 0).map(c => `
+              <span class="seq-type-mini ${c}" title="${escapeHTML(TASK_TYPE_LABEL[c] || c)} : ${cadCounts[c]}">
+                <span class="stm-ico">${TASK_TYPE_ICON[c] || ''}</span>${cadCounts[c]}
+              </span>
+            `).join('')}
+          </span>
+          <button class="task-run-bar" data-seq-run="${cadId}" type="button" title="Lancer les tâches de cette séquence">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            Démarrer <span class="cnt">${cadAll.filter(t => t.status !== 'done').length}</span>
+          </button>
+          <button class="seq-status-toggle ${isActive ? 'active' : 'paused'}" data-seq-toggle="${cadId}" type="button" title="${isActive ? 'Mettre en pause' : 'Réactiver'} la séquence">
+            <span class="sst-dot"></span>
+            <span class="sst-label-active">Active</span>
+            <span class="sst-label-paused">Pause</span>
+          </button>
+        </span>
+      </div>
+      <div class="seq-channel-row">
+        ${channelOrder.filter(c => cadCounts[c] > 0).map(c => `
+          <button class="seq-ch-pill ${activeTaskType === c ? 'active' : ''}" data-seq-ch="${c}" type="button">
+            <span class="sch-ico tk-card-icon ${c}">${TASK_TYPE_ICON[c] || ''}</span>
+            ${escapeHTML(TASK_TYPE_LABEL[c] || c)}
+            <span class="sch-cnt">${cadCounts[c]}</span>
+          </button>
+        `).join('') || '<span class="sch-empty">Aucune tâche</span>'}
       </div>
       <div class="seq-group-body"></div>
     `;
     const head = group.querySelector('.seq-group-head');
-    head.addEventListener('click', () => {
+    head.addEventListener('click', e => {
+      // Ignore clicks coming from interactive children (buttons, pills)
+      if (e.target.closest('.task-run-bar, .seq-status-toggle, .seq-ch-pill, .seq-overdue-badge, .seq-type-mini')) return;
       if (group.classList.contains('collapsed')) {
         group.classList.remove('collapsed');
         collapsedSeqGroups.delete(cadId);
@@ -18166,6 +20173,26 @@ function renderTasksBySequence() {
         group.classList.add('collapsed');
         collapsedSeqGroups.add(cadId);
       }
+    });
+    // Per-sequence channel filter pills
+    group.querySelectorAll('[data-seq-ch]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const ch = btn.dataset.seqCh;
+        activeTaskType = (activeTaskType === ch) ? null : ch;
+        renderTasks();
+      });
+    });
+    // Run button for this sequence
+    group.querySelector('[data-seq-run]')?.addEventListener('click', e => {
+      e.stopPropagation();
+      openTaskRunnerForCadence(cadId);
+    });
+    // Active / Paused toggle
+    group.querySelector('[data-seq-toggle]')?.addEventListener('click', e => {
+      e.stopPropagation();
+      _toggleCadenceActive(cadId);
+      renderTasks();
     });
     const body = group.querySelector('.seq-group-body');
     items.forEach(t => body.appendChild(makeTaskCard(t)));
@@ -18196,17 +20223,25 @@ const _origRenderTasks = renderTasks;
 window.renderTasks = function() {
   renderChannelFilters();
   renderKindFilterDropdown();
+  // Cadence bar (Enroller / Gérer) — only relevant in the sequence view
+  const cadBar = document.getElementById('cadenceBar');
+  if (cadBar) cadBar.style.display = (taskGroupMode === 'sequence') ? '' : 'none';
   if (taskGroupMode === 'sequence' && taskViewMode !== 'kanban') {
     // Keep KPIs + tabs hidden when grouped to focus on sequences
     const kpis = document.getElementById('salesKpis'); if (kpis) kpis.style.display = 'none';
     const tabs = document.getElementById('taskTabs'); if (tabs) tabs.style.display = 'none';
     const taskKanban = document.getElementById('taskKanban'); if (taskKanban) taskKanban.style.display = 'none';
     const list = document.getElementById('taskList'); if (list) list.style.display = '';
+    // Hide the global channel bar — per-sequence pills are shown inside each group
+    const ch = document.getElementById('channelFilters'); if (ch) ch.style.display = 'none';
     renderTasksBySequence();
     return;
   }
   // Make sure standard widgets are visible
   const kpis = document.getElementById('salesKpis'); if (kpis) kpis.style.display = '';
+  const ch = document.getElementById('channelFilters'); if (ch) ch.style.display = '';
+  // Leaving sequence view → next time we come back, re-collapse everything
+  _seqViewInitialized = false;
   _origRenderTasks();
 };
 
